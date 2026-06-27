@@ -7,21 +7,21 @@ import os
 import time
 import uuid
 
-import anthropic
+from groq import Groq
 from dotenv import load_dotenv
 
 from backend.models.schemas import AgentStep, Action
 
 load_dotenv()
 
-MODEL = os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-20241022")
+MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 _client = None
 
 
-def _get_client() -> anthropic.Anthropic:
+def _get_client() -> Groq:
     global _client
     if _client is None:
-        _client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        _client = Groq(api_key=os.getenv("GROQ_API_KEY"))
     return _client
 
 
@@ -108,13 +108,16 @@ Knowledge base context:
 {memory_note}"""
 
     try:
-        response = _get_client().messages.create(
+        response = _get_client().chat.completions.create(
             model=MODEL,
             max_tokens=1024,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": prompt}],
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt}
+            ],
+            response_format={"type": "json_object"}
         )
-        content = response.content[0].text.strip()
+        content = response.choices[0].message.content.strip()
         if content.startswith("```"):
             content = content.split("```")[1]
             if content.startswith("json"):

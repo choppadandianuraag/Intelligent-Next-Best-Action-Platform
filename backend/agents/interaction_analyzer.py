@@ -1,26 +1,26 @@
 """
-Interaction Analyzer agent — prompts Claude to extract signals from transcript.
+Interaction Analyzer agent — prompts Groq to extract signals from transcript.
 Returns signals: list[dict] each with text, type (risk|positive|neutral), severity (high|medium|low).
 """
 import json
 import os
 import time
 
-import anthropic
+from groq import Groq
 from dotenv import load_dotenv
 
 from backend.models.schemas import AgentStep
 
 load_dotenv()
 
-MODEL = os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-20241022")
+MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 _client = None
 
 
-def _get_client() -> anthropic.Anthropic:
+def _get_client() -> Groq:
     global _client
     if _client is None:
-        _client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        _client = Groq(api_key=os.getenv("GROQ_API_KEY"))
     return _client
 
 
@@ -47,13 +47,15 @@ def interaction_analyzer_node(state: dict) -> dict:
     prompt = f"Extract signals from this customer meeting transcript:\n\n{raw_input}"
 
     try:
-        response = _get_client().messages.create(
+        response = _get_client().chat.completions.create(
             model=MODEL,
             max_tokens=1024,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": prompt}],
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": prompt}
+            ],
         )
-        content = response.content[0].text.strip()
+        content = response.choices[0].message.content.strip()
         # Strip markdown fences if present
         if content.startswith("```"):
             content = content.split("```")[1]
