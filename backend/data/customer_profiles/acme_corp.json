@@ -1,0 +1,15 @@
+{
+  "account_name": "Acme Corp",
+  "arr": 85000,
+  "industry": "Manufacturing",
+  "contract_end": "2026-08-15",
+  "csm": "Sarah Chen",
+  "health_score_history": [72, 68, 61, 55, 48],
+  "daily_active_users": 34,
+  "last_login_date": "2026-06-20",
+  "features_adopted": ["dashboard", "alerts"],
+  "open_tickets": 7,
+  "nps_score": 22,
+  "risk_score": 0.84,
+  "risk_level": "critical"
+}

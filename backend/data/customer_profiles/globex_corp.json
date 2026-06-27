@@ -1,0 +1,15 @@
+{
+  "account_name": "Globex Corp",
+  "arr": 145000,
+  "industry": "Finance",
+  "contract_end": "2026-12-31",
+  "csm": "David Kim",
+  "health_score_history": [82, 85, 88, 91, 94],
+  "daily_active_users": 89,
+  "last_login_date": "2026-06-23",
+  "features_adopted": ["dashboard", "alerts", "reports", "automation", "integrations"],
+  "open_tickets": 2,
+  "nps_score": 68,
+  "risk_score": 0.12,
+  "risk_level": "low"
+}

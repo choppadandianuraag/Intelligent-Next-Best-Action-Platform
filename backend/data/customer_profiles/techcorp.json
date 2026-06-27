@@ -1,0 +1,15 @@
+{
+  "account_name": "TechCorp",
+  "arr": 48000,
+  "industry": "Software",
+  "contract_end": "2026-10-15",
+  "csm": "Emily Zhang",
+  "health_score_history": [55, 52, 49, 47, 50],
+  "daily_active_users": 18,
+  "last_login_date": "2026-06-22",
+  "features_adopted": ["dashboard"],
+  "open_tickets": 4,
+  "nps_score": 45,
+  "risk_score": 0.52,
+  "risk_level": "medium"
+}
