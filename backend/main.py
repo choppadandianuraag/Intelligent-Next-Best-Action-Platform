@@ -29,7 +29,7 @@ class AnalyzeRequest(BaseModel):
 class FeedbackRequest(BaseModel):
     request_id: str
     decision: str
-    modification_notes: str | None = ""
+    modification_notes: str | None = None
 
 
 # In-memory cache of recent results (request_id → output dict) for feedback linking

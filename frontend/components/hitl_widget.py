@@ -102,6 +102,6 @@ def render_hitl(request_id: str) -> None:
             )
 
     if accept:
-        _submit_feedback(request_id, "accepted", None, decision_key, submitted_key)
+        _submit_feedback(request_id, "accepted", "", decision_key, submitted_key)
     elif reject:
-        _submit_feedback(request_id, "rejected", None, decision_key, submitted_key)
+        _submit_feedback(request_id, "rejected", "", decision_key, submitted_key)
