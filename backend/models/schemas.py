@@ -47,5 +47,5 @@ class RecommendationOutput(BaseModel):
     evidence: List[Evidence]
     primary_recommendation: Action
     alternatives: List[Action]
-    memory_context: Optional[MemoryContext] = None
+    memory_context: Optional[MemoryContext]
     generated_at: datetime

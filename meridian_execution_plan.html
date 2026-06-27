@@ -1,0 +1,316 @@
+
+<style>
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.mh{padding:16px 0 18px}
+.mlogo{font-size:19px;font-weight:500;color:var(--text-primary);letter-spacing:-.01em}
+.mtag{font-size:12px;color:var(--text-secondary);margin:3px 0 10px}
+.mstats{display:flex;flex-wrap:wrap;gap:8px}
+.mst{background:var(--surface-1);border:0.5px solid var(--border);border-radius:6px;padding:5px 10px;font-size:12px;color:var(--text-secondary)}
+.slabel{font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px}
+.tree{background:var(--surface-1);border:0.5px solid var(--border);border-radius:8px;padding:12px 14px;font-family:var(--font-mono);font-size:11.5px;color:var(--text-secondary);line-height:1.85}
+.dir{color:var(--text-primary);font-weight:500}
+.cm{color:var(--text-muted)}
+.pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px}
+.pill{padding:3px 9px;border-radius:4px;font-size:11px;border:0.5px solid var(--border);color:var(--text-secondary);background:var(--surface-2)}
+.pill.core{border-color:var(--border-accent);color:var(--text-accent);background:var(--bg-accent)}
+.pc{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;margin-bottom:10px}
+.pch{padding:12px 14px;display:flex;gap:12px;align-items:flex-start;border-bottom:0.5px solid var(--border)}
+.pbadge{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0}
+.ptitle{font-size:14px;font-weight:500;color:var(--text-primary);margin:0 0 3px}
+.pfiles{font-size:10.5px;color:var(--text-muted);font-family:var(--font-mono);margin:0;line-height:1.7}
+details{border-bottom:0.5px solid var(--border)}
+details:last-child{border-bottom:none}
+summary{padding:9px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;list-style:none;font-size:12px;color:var(--text-primary);font-weight:500;user-select:none}
+summary::-webkit-details-marker{display:none}
+.sarrow{font-size:10px;color:var(--text-muted);transition:transform .15s;flex-shrink:0}
+details[open] .sarrow{transform:rotate(90deg)}
+.dbadge{font-size:10px;font-weight:500;padding:2px 7px;border-radius:3px}
+.d1{background:#E6F1FB;color:#0C447C}
+.d2{background:#EEEDFE;color:#3C3489}
+.d3{background:#EAF3DE;color:#27500A}
+.tbody{padding:2px 14px 12px 42px}
+.task{font-size:12px;color:var(--text-secondary);padding:4px 0;line-height:1.55;display:flex;gap:7px;align-items:flex-start;border-bottom:0.5px solid var(--border)}
+.task:last-child{border-bottom:none}
+.ta{color:var(--text-muted);flex-shrink:0;margin-top:2px;font-size:11px}
+code{font-family:var(--font-mono);font-size:10.5px;background:var(--surface-1);border:0.5px solid var(--border);border-radius:3px;padding:1px 4px;color:var(--text-primary)}
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.dcard{background:var(--surface-1);border:0.5px solid var(--border);border-radius:8px;padding:10px 12px}
+.dtitle{font-size:12px;font-weight:500;color:var(--text-primary);margin:0 0 6px;display:flex;align-items:center;gap:6px}
+.dcnt{font-size:10px;font-weight:500;background:var(--surface-0);border:0.5px solid var(--border);border-radius:3px;padding:1px 5px;color:var(--text-muted)}
+.ditem{font-size:11px;color:var(--text-secondary);padding:2px 0;line-height:1.4}
+.ditem b{color:var(--text-primary);font-weight:500}
+.diff-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+.diff-card{background:var(--surface-1);border:0.5px solid var(--border);border-radius:8px;padding:10px 12px}
+.diff-num{font-size:11px;font-weight:500;color:var(--text-accent);margin-bottom:4px}
+.diff-title{font-size:12px;font-weight:500;color:var(--text-primary);margin:0 0 4px}
+.diff-how{font-size:11px;color:var(--text-secondary);line-height:1.5}
+.diff-code{font-family:var(--font-mono);font-size:10.5px;background:var(--surface-0);border:0.5px solid var(--border);border-radius:4px;padding:6px 8px;color:var(--text-secondary);margin-top:6px;line-height:1.7;overflow-x:auto;white-space:pre}
+.demo-card{background:var(--surface-1);border:0.5px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px}
+.demo-num{font-size:10px;font-weight:500;color:var(--text-accent);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.demo-title{font-size:13px;font-weight:500;color:var(--text-primary);margin:0 0 4px}
+.demo-body{font-size:11px;color:var(--text-secondary);line-height:1.5}
+.schema-box{background:var(--surface-1);border:0.5px solid var(--border);border-radius:8px;padding:10px 12px;font-family:var(--font-mono);font-size:11px;color:var(--text-secondary);line-height:1.8;margin-top:6px;white-space:pre}
+.kw{color:var(--text-accent)}
+.ty{color:var(--text-warning)}
+</style>
+
+<h2 class="sr-only">Meridian execution plan: repo structure, 3-person assignments, data specs, differentiators, and demo scenarios</h2>
+
+<div class="mh">
+  <div class="mlogo">Meridian</div>
+  <div class="mtag">Decision intelligence for customer success teams</div>
+  <div class="mstats">
+    <div class="mst"><i class="ti ti-calendar" style="font-size:12px;vertical-align:-1px;margin-right:4px" aria-hidden="true"></i>3 days</div>
+    <div class="mst"><i class="ti ti-users" style="font-size:12px;vertical-align:-1px;margin-right:4px" aria-hidden="true"></i>3 people</div>
+    <div class="mst">Domain: SaaS customer success</div>
+    <div class="mst">Python 3.11 · LangGraph · ChromaDB · FastAPI · Streamlit</div>
+  </div>
+</div>
+
+<div class="slabel">Repository structure</div>
+<div class="tree">
+<span class="dir">meridian/</span>
+├── README.md · requirements.txt · .env.example · .gitignore
+├── <span class="dir">backend/</span>
+│   ├── main.py <span class="cm">← FastAPI: POST /analyze, POST /feedback, GET /health</span>
+│   ├── <span class="dir">agents/</span>
+│   │   ├── graph.py <span class="cm">← LangGraph StateGraph, wires all 5 agents</span>
+│   │   ├── planner.py <span class="cm">← reads context, decides which agents run + order</span>
+│   │   ├── interaction_analyzer.py <span class="cm">← extracts signals from transcript</span>
+│   │   ├── knowledge_retriever.py <span class="cm">← ChromaDB semantic search, top-5 chunks</span>
+│   │   ├── risk_assessor.py <span class="cm">← scores 0-100%, classifies level + signals</span>
+│   │   └── nba_generator.py <span class="cm">← primary + 2 alternatives, confidence, evidence</span>
+│   ├── <span class="dir">memory/</span>
+│   │   ├── vector_store.py <span class="cm">← ChromaDB wrapper, collections: kb + resolved</span>
+│   │   └── episodic.py <span class="cm">← SQLite: persist accepted recommendations</span>
+│   ├── <span class="dir">models/</span>
+│   │   └── schemas.py <span class="cm">← Pydantic: AgentStep, Evidence, Action, RecommendationOutput</span>
+│   └── <span class="dir">data/</span>
+│       ├── <span class="dir">meeting_notes/</span> <span class="cm">← 10 × .md transcripts</span>
+│       ├── <span class="dir">playbooks/</span> <span class="cm">← 15 × .md knowledge articles</span>
+│       ├── <span class="dir">customer_profiles/</span> <span class="cm">← 5 × .json CRM snapshots</span>
+│       └── <span class="dir">resolved_cases/</span> <span class="cm">← 6 × .json for memory seeding</span>
+├── <span class="dir">frontend/</span>
+│   ├── app.py <span class="cm">← Streamlit entry point</span>
+│   └── <span class="dir">components/</span>
+│       ├── agent_trace.py · recommendation_panel.py
+│       ├── memory_panel.py · hitl_widget.py
+├── <span class="dir">scripts/</span>
+│   ├── ingest.py <span class="cm">← embed all data/ docs into ChromaDB</span>
+│   └── seed_memory.py <span class="cm">← pre-load resolved_cases into episodic memory</span>
+├── <span class="dir">tests/</span>  eval_scenarios.py <span class="cm">← 5-case eval with expected outputs</span>
+└── <span class="dir">docs/</span>  ARCHITECTURE.md · demo_script.md
+</div>
+
+<div class="slabel">Tech stack</div>
+<div class="pills">
+  <span class="pill core">langgraph</span>
+  <span class="pill core">anthropic</span>
+  <span class="pill core">chromadb</span>
+  <span class="pill core">fastapi</span>
+  <span class="pill core">streamlit</span>
+  <span class="pill">sentence-transformers</span>
+  <span class="pill">pydantic v2</span>
+  <span class="pill">uvicorn</span>
+  <span class="pill">httpx</span>
+  <span class="pill">sqlite3</span>
+  <span class="pill">python-dotenv</span>
+  <span class="pill">pytest</span>
+</div>
+
+<div class="slabel">Person 1 — AI / agents lead</div>
+<div class="pc">
+  <div class="pch">
+    <div class="pbadge" style="background:#E6F1FB;color:#0C447C">P1</div>
+    <div>
+      <p class="ptitle">AI / agents lead</p>
+      <p class="pfiles">schemas.py · graph.py · planner.py · interaction_analyzer.py · knowledge_retriever.py · risk_assessor.py · nba_generator.py</p>
+    </div>
+  </div>
+  <details open>
+    <summary><span class="sarrow">▸</span><span class="dbadge d1">Day 1</span> Foundation: schemas + graph + first 2 agents</summary>
+    <div class="tbody">
+      <div class="task"><span class="ta">→</span>Define all Pydantic schemas in <code>backend/models/schemas.py</code>: <code>AgentStep(agent_name, action, reasoning, duration_ms)</code>, <code>Evidence(id, source_type, source_name, excerpt, relevance_score)</code>, <code>Action(title, description, confidence, estimated_impact, evidence_ids, precedent_accounts)</code>, <code>MemoryContext(similar_cases, confidence_boost, base_confidence, boosted_confidence)</code>, <code>RecommendationOutput</code> — all other agents produce from these</div>
+      <div class="task"><span class="ta">→</span>Set up <code>LangGraph StateGraph</code> in <code>graph.py</code>. State dict keys: <code>raw_input</code>, <code>signals</code>, <code>knowledge_chunks</code>, <code>risk</code>, <code>recommendations</code>, <code>agent_trace</code>. Each agent reads state, appends to <code>agent_trace</code>, writes its output key</div>
+      <div class="task"><span class="ta">→</span>Implement <code>planner.py</code>: reads <code>raw_input</code>, always invokes all 4 specialist agents in order, logs <code>AgentStep</code> with a brief reasoning string and start/end timestamps. Returns <code>execution_plan: list[str]</code></div>
+      <div class="task"><span class="ta">→</span>Implement <code>interaction_analyzer.py</code>: prompt Claude with the meeting transcript, return <code>signals: list[dict]</code> each with <code>text</code>, <code>type</code> (risk|positive|neutral), <code>severity</code> (high|medium|low). Log <code>AgentStep</code></div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="sarrow">▸</span><span class="dbadge d2">Day 2</span> Remaining agents + confidence scoring</summary>
+    <div class="tbody">
+      <div class="task"><span class="ta">→</span>Implement <code>knowledge_retriever.py</code>: import <code>vector_store.py</code> from P2, call <code>search(query, collection="kb", n=5)</code> using signal texts as queries. Return top-5 <code>Evidence</code> objects with <code>relevance_score</code>. Log <code>AgentStep</code></div>
+      <div class="task"><span class="ta">→</span>Implement <code>risk_assessor.py</code>: prompt Claude with signals + retrieved knowledge chunks. Output structured JSON: <code>risk_score</code> (0.0–1.0), <code>risk_level</code> (critical|high|medium|low), <code>signal_count</code>, <code>risk_factors: list[str]</code>. Map each factor to an <code>evidence_id</code>. Log <code>AgentStep</code></div>
+      <div class="task"><span class="ta">→</span>Implement <code>nba_generator.py</code>: receives risk assessment + knowledge + episodic memory context from P2. Prompt Claude to output: 1 primary action + 2 alternatives, each with <code>title</code>, <code>description</code>, <code>confidence</code> (0.0–1.0), <code>estimated_impact</code>, <code>evidence_ids</code>, <code>precedent_accounts</code>. Apply memory confidence boost: <code>boosted_confidence = min(base * (1 + 0.06 * similar_count), 0.97)</code></div>
+      <div class="task"><span class="ta">→</span>Wire all agents in <code>graph.py</code> and expose <code>run(raw_input: str, account_id: str) → RecommendationOutput</code> function that P3's FastAPI calls</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="sarrow">▸</span><span class="dbadge d3">Day 3</span> Prompt tuning + integration</summary>
+    <div class="tbody">
+      <div class="task"><span class="ta">→</span>Tune all agent prompts against the 3 demo scenarios. Target: risk scores within ±5% of expected, primary recommendation matches expected action</div>
+      <div class="task"><span class="ta">→</span>Add <code>duration_ms</code> to every <code>AgentStep</code> using <code>time.time()</code> before and after each agent call</div>
+      <div class="task"><span class="ta">→</span>Run <code>tests/eval_scenarios.py</code> and fix any agent producing wrong risk level or irrelevant NBA</div>
+      <div class="task"><span class="ta">→</span>Help P3 with architecture diagram: explain the LangGraph flow + state transitions</div>
+    </div>
+  </details>
+</div>
+
+<div class="slabel">Person 2 — Data / memory lead</div>
+<div class="pc">
+  <div class="pch">
+    <div class="pbadge" style="background:#EEEDFE;color:#3C3489">P2</div>
+    <div>
+      <p class="ptitle">Data / memory lead</p>
+      <p class="pfiles">data/* · vector_store.py · episodic.py · scripts/ingest.py · scripts/seed_memory.py</p>
+    </div>
+  </div>
+  <details open>
+    <summary><span class="sarrow">▸</span><span class="dbadge d1">Day 1</span> All content + ChromaDB ingestion pipeline</summary>
+    <div class="tbody">
+      <div class="task"><span class="ta">→</span>Write <b>10 meeting transcripts</b> in <code>data/meeting_notes/</code>. Use real dialogue format (speaker labels, specific numbers, product feature names). 3 at-risk (Acme Corp, BlueWave Tech, Nexus Systems), 3 healthy/expansion (Globex Corp, Umbrella Corp, Initech), 2 onboarding (TechCorp, Quantum Labs), 2 to-be-resolved (GlobexQ1, InitechQ4) — these last two seed memory</div>
+      <div class="task"><span class="ta">→</span>Write <b>15 knowledge articles</b> in <code>data/playbooks/</code> as .md files: <code>churn_prevention.md</code>, <code>ebr_guide.md</code>, <code>onboarding_best_practices.md</code>, <code>expansion_playbook.md</code>, <code>escalation_procedures.md</code>, <code>health_score_methodology.md</code>, <code>qbr_template.md</code>, <code>champion_change.md</code>, <code>renewal_risk_signals.md</code>, <code>product_reporting_module.md</code>, <code>product_integrations.md</code>, <code>product_automation.md</code>, <code>competitive_positioning.md</code>, <code>success_plan_template.md</code>, <code>sla_policy.md</code></div>
+      <div class="task"><span class="ta">→</span>Write <b>5 customer profiles</b> in <code>data/customer_profiles/</code> as .json: fields = <code>account_name, arr, industry, contract_end, csm, health_score_history: [float], daily_active_users, last_login_date, features_adopted: [str], open_tickets, nps_score</code></div>
+      <div class="task"><span class="ta">→</span>Implement <code>backend/memory/vector_store.py</code>: ChromaDB client with 2 named collections — <code>"knowledge_base"</code> and <code>"resolved_cases"</code>. Expose: <code>add(texts, metadatas, collection)</code>, <code>search(query, collection, n=5) → list[dict]</code> using <code>sentence-transformers/all-MiniLM-L6-v2</code></div>
+      <div class="task"><span class="ta">→</span>Write <code>scripts/ingest.py</code>: reads all files in <code>data/playbooks/</code> + <code>data/meeting_notes/</code>, splits into 500-token chunks, embeds and stores in <code>"knowledge_base"</code>. Metadata per chunk: <code>source_file, chunk_index, category</code>. Run it and confirm: <code>collection.count() >= 80</code></div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="sarrow">▸</span><span class="dbadge d2">Day 2</span> Resolved cases + episodic memory loop</summary>
+    <div class="tbody">
+      <div class="task"><span class="ta">→</span>Write <b>6 resolved cases</b> in <code>data/resolved_cases/</code> as .json: fields = <code>case_id, account_name, arr, situation_summary, risk_signals: [str], action_taken, outcome, days_to_resolution, renewal_achieved: bool, csm_notes</code>. 4 should be EBR-resolved, 1 re-onboarding, 1 champion change. These are what the memory system learns from</div>
+      <div class="task"><span class="ta">→</span>Implement <code>backend/memory/episodic.py</code>: SQLite table <code>memory_log(id, account, risk_score, risk_level, recommendation_title, decision, modification_notes, outcome, timestamp)</code>. Expose: <code>log_feedback(data)</code> and <code>find_similar(risk_level, risk_score, top_n=3) → list[dict]</code> using <code>risk_level</code> + <code>risk_score</code> proximity as similarity</div>
+      <div class="task"><span class="ta">→</span>Write <code>scripts/seed_memory.py</code>: reads all <code>data/resolved_cases/</code> files and inserts them into <code>episodic.py</code> memory_log as pre-existing resolved cases. Run this before the Day 3 demo to ensure memory has data</div>
+      <div class="task"><span class="ta">→</span>Expose <code>get_memory_context(risk_level, risk_score) → MemoryContext</code> in <code>episodic.py</code> that P1's <code>nba_generator.py</code> calls. Returns: <code>similar_cases_found</code>, <code>precedent_accounts: [str]</code>, <code>base_confidence</code>, <code>boosted_confidence</code></div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="sarrow">▸</span><span class="dbadge d3">Day 3</span> Demo prep + eval scenarios</summary>
+    <div class="tbody">
+      <div class="task"><span class="ta">→</span>Run <code>seed_memory.py</code> to pre-load all resolved cases. Verify: <code>SELECT count(*) FROM memory_log</code> returns ≥ 6</div>
+      <div class="task"><span class="ta">→</span>Write <code>tests/eval_scenarios.py</code>: 5 test cases each with <code>input_transcript</code>, <code>expected_risk_level</code>, <code>expected_primary_action_keyword</code>. Assert outputs match. P3 runs this to confirm system works before recording</div>
+      <div class="task"><span class="ta">→</span>Prepare demo state files in <code>docs/demo_script.md</code>: which account to load for each scenario, what to say, when to click Modify, what feedback to type</div>
+    </div>
+  </details>
+</div>
+
+<div class="slabel">Person 3 — Frontend / demo lead</div>
+<div class="pc">
+  <div class="pch">
+    <div class="pbadge" style="background:#EAF3DE;color:#27500A">P3</div>
+    <div>
+      <p class="ptitle">Frontend / demo lead</p>
+      <p class="pfiles">backend/main.py · frontend/app.py · frontend/components/* · docs/* · README.md</p>
+    </div>
+  </div>
+  <details open>
+    <summary><span class="sarrow">▸</span><span class="dbadge d1">Day 1</span> FastAPI skeleton + Streamlit shell + agent trace UI</summary>
+    <div class="tbody">
+      <div class="task"><span class="ta">→</span>Build <code>backend/main.py</code> FastAPI app. <code>POST /analyze</code>: accepts <code>{"account_id": str, "interaction_text": str}</code>, calls <code>graph.run()</code>, returns <code>RecommendationOutput</code>. <code>POST /feedback</code>: accepts <code>{"request_id", "decision", "modification_notes"}</code>, calls <code>episodic.log_feedback()</code>. <code>GET /health</code>: returns <code>{"status": "ok"}</code></div>
+      <div class="task"><span class="ta">→</span>Build <code>frontend/app.py</code> Streamlit skeleton: left sidebar with account dropdown (5 accounts), paste-transcript textarea, and "Analyse account" button. Main area starts empty with a centered placeholder</div>
+      <div class="task"><span class="ta">→</span>Build <code>frontend/components/agent_trace.py</code>: <code>render_agent_trace(steps: list[AgentStep])</code> renders an <code>st.expander("Agent trace", expanded=True)</code> with one row per step showing the agent name badge, action text, reasoning in muted text, and duration in ms right-aligned</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="sarrow">▸</span><span class="dbadge d2">Day 2</span> Full recommendation panel + HITL modify path</summary>
+    <div class="tbody">
+      <div class="task"><span class="ta">→</span>Build <code>frontend/components/recommendation_panel.py</code>: risk score row (big number + colored bar + signal count badge), then 3 evidence cards each with source-type badge (Meeting note / Playbook / Memory), excerpt, and relevance bar</div>
+      <div class="task"><span class="ta">→</span>Build <code>frontend/components/memory_panel.py</code>: only renders when <code>memory_context.similar_cases_found > 0</code>. Shows: "Memory lookup: N similar cases found", account names as badges, and a confidence boost bar showing <code>base_confidence → boosted_confidence</code> with the delta highlighted in green</div>
+      <div class="task"><span class="ta">→</span>Build <code>frontend/components/hitl_widget.py</code>: renders 3 buttons. Accept → calls <code>/feedback</code> with <code>decision="accept"</code>, shows success toast. Reject → same with <code>decision="reject"</code>. Modify → shows a <code>st.text_area</code> with placeholder "What would you like to change?" and a Submit button that calls <code>/feedback</code> with <code>decision="modify"</code> + notes, then re-runs <code>/analyze</code> with the feedback appended to the original prompt. Display "Updated based on your feedback: [what changed]"</div>
+      <div class="task"><span class="ta">→</span>Wire everything in <code>app.py</code>: on button click, call <code>/analyze</code> via <code>httpx</code>, store result in <code>st.session_state</code>, render trace → risk → evidence → memory → primary recommendation → alternatives → HITL</div>
+    </div>
+  </details>
+  <details>
+    <summary><span class="sarrow">▸</span><span class="dbadge d3">Day 3</span> Architecture + README + video</summary>
+    <div class="tbody">
+      <div class="task"><span class="ta">→</span>Draw architecture diagram in <code>docs/ARCHITECTURE.md</code>: show the 5-agent LangGraph flow, ChromaDB (2 collections), SQLite memory, FastAPI, and Streamlit. Use Mermaid syntax — renders natively on GitHub</div>
+      <div class="task"><span class="ta">→</span>Write <code>README.md</code>: one-line product description, prerequisites, <code>pip install -r requirements.txt</code>, <code>python scripts/ingest.py</code>, <code>python scripts/seed_memory.py</code>, <code>uvicorn backend.main:app</code>, <code>streamlit run frontend/app.py</code>. Include a screenshot of the recommendation panel</div>
+      <div class="task"><span class="ta">→</span>Record 5-min demo video following the 3-scenario arc: Acme Corp (at-risk, no memory) → accept recommendation → TechCorp (same type, memory kicks in, confidence boosted) → show architecture diagram. Screen-record with a talking head overlay if possible</div>
+      <div class="task"><span class="ta">→</span>Record 5-min architecture walkthrough: walk through each agent in <code>graph.py</code>, explain LangGraph state transitions, show ChromaDB collections, explain memory boost formula, show Pydantic schemas</div>
+      <div class="task"><span class="ta">→</span>Final push: tag release as <code>v1.0.0-hackathon</code>, verify README renders correctly on GitHub, share repo link</div>
+    </div>
+  </details>
+</div>
+
+<div class="slabel">Sample data to create — content guide for P2</div>
+<div class="dgrid">
+  <div class="dcard">
+    <div class="dtitle">Meeting transcripts <span class="dcnt">10 files</span></div>
+    <div class="ditem"><b>Acme Corp</b> — VP angry, 47 days to renewal, no adoption of reporting module, explicit churn threat</div>
+    <div class="ditem"><b>BlueWave Tech</b> — CFO questioning ROI, competitor evaluation mentioned by name</div>
+    <div class="ditem"><b>Nexus Systems</b> — key champion left company, support tickets spiking 3×</div>
+    <div class="ditem"><b>Globex Corp</b> — power users, asking about enterprise tier, wants API access</div>
+    <div class="ditem"><b>Umbrella Corp</b> — great NPS, wants to expand to 3 new teams</div>
+    <div class="ditem"><b>Initech</b> — successful QBR, requesting custom integration scoping</div>
+    <div class="ditem"><b>TechCorp</b> — 2 weeks in, struggling with setup but engaged</div>
+    <div class="ditem"><b>Quantum Labs</b> — on track, early adoption strong</div>
+    <div class="ditem"><b>GlobexQ1</b> — was at-risk (resolved): EBR worked, renewed → goes into memory</div>
+    <div class="ditem"><b>InitechQ4</b> — was at-risk (resolved): re-onboarding worked → goes into memory</div>
+  </div>
+  <div class="dcard">
+    <div class="dtitle">Knowledge base articles <span class="dcnt">15 files</span></div>
+    <div class="ditem"><b>churn_prevention.md</b> — risk signals table, intervention ladder, timelines</div>
+    <div class="ditem"><b>ebr_guide.md</b> — when to call EBR, agenda template, success metrics</div>
+    <div class="ditem"><b>onboarding_best_practices.md</b> — 30/60/90 day milestones</div>
+    <div class="ditem"><b>expansion_playbook.md</b> — signals, upsell conversation framework</div>
+    <div class="ditem"><b>escalation_procedures.md</b> — severity levels, escalation paths</div>
+    <div class="ditem"><b>health_score_methodology.md</b> — formula, thresholds, CSM actions</div>
+    <div class="ditem"><b>renewal_risk_signals.md</b> — silence > 10 days = red flag, etc.</div>
+    <div class="ditem"><b>champion_change.md</b> — what to do when champion leaves</div>
+    <div class="ditem"><b>product_reporting_module.md</b> — setup guide, common issues, adoption tips</div>
+    <div class="ditem"><b>+ 6 more</b> — qbr_template, sla_policy, competitive, integrations, automation, success_plan</div>
+  </div>
+  <div class="dcard">
+    <div class="dtitle">Customer profiles <span class="dcnt">5 JSON files</span></div>
+    <div class="ditem">Fields: <code>account_name, arr, industry, contract_end, csm, health_score_history[],</code></div>
+    <div class="ditem"><code>daily_active_users, last_login_date, features_adopted[], open_tickets, nps_score</code></div>
+    <div class="ditem">Use realistic numbers — e.g. ARR $45K–$180K, NPS 20–72, 2–8 open tickets</div>
+  </div>
+  <div class="dcard">
+    <div class="dtitle">Resolved cases <span class="dcnt">6 JSON files</span></div>
+    <div class="ditem">Fields: <code>case_id, account_name, situation_summary, risk_signals[],</code></div>
+    <div class="ditem"><code>action_taken, outcome, days_to_resolution, renewal_achieved, csm_notes</code></div>
+    <div class="ditem">4 × EBR resolved, 1 × re-onboarding resolved, 1 × champion change resolved</div>
+    <div class="ditem">This is the data that makes the memory demo work on Day 3</div>
+  </div>
+</div>
+
+<div class="slabel">Pydantic schema — the contract between all components</div>
+<div class="schema-box"><span class="kw">class</span> AgentStep(BaseModel):
+    agent_name: <span class="ty">str</span>; action: <span class="ty">str</span>; reasoning: <span class="ty">str</span>; duration_ms: <span class="ty">int</span>
+
+<span class="kw">class</span> Evidence(BaseModel):
+    id: <span class="ty">str</span>; source_type: <span class="ty">Literal</span>["meeting_note","playbook","memory","crm"]
+    source_name: <span class="ty">str</span>; excerpt: <span class="ty">str</span>; relevance_score: <span class="ty">float</span>
+
+<span class="kw">class</span> Action(BaseModel):
+    title: <span class="ty">str</span>; description: <span class="ty">str</span>; confidence: <span class="ty">float</span>
+    estimated_impact: <span class="ty">str</span>; evidence_ids: <span class="ty">List[str]</span>; precedent_accounts: <span class="ty">List[str]</span>
+
+<span class="kw">class</span> MemoryContext(BaseModel):
+    similar_cases_found: <span class="ty">int</span>; confidence_boost: <span class="ty">float</span>
+    base_confidence: <span class="ty">float</span>; boosted_confidence: <span class="ty">float</span>; precedent_accounts: <span class="ty">List[str]</span>
+
+<span class="kw">class</span> RecommendationOutput(BaseModel):
+    request_id: <span class="ty">str</span>; account_name: <span class="ty">str</span>; csm_name: <span class="ty">str</span>; renewal_date: <span class="ty">str</span>
+    risk_score: <span class="ty">float</span>; risk_level: <span class="ty">Literal</span>["critical","high","medium","low"]; signal_count: <span class="ty">int</span>
+    agent_trace: <span class="ty">List[AgentStep]</span>; evidence: <span class="ty">List[Evidence]</span>
+    primary_recommendation: <span class="ty">Action</span>; alternatives: <span class="ty">List[Action]</span>
+    memory_context: <span class="ty">Optional[MemoryContext]</span>; generated_at: <span class="ty">datetime</span></div>
+
+<div class="slabel">3 demo scenarios — the arc for the 5-minute video</div>
+<div class="demo-card">
+  <div class="demo-num">Scenario 1 · no memory</div>
+  <div class="demo-title">Acme Corp — at-risk, cold start</div>
+  <div class="demo-body">Paste the Acme Corp transcript. System returns 84% churn risk, 4 signals detected. Primary: Schedule EBR within 48h, confidence 73% (no memory yet). Say: "Sarah just got off a difficult call. Here's what Meridian tells her to do." Click Accept → logged to memory.</div>
+</div>
+<div class="demo-card">
+  <div class="demo-num">Scenario 2 · contrast</div>
+  <div class="demo-title">Globex Corp — healthy, expansion opportunity</div>
+  <div class="demo-body">Paste the Globex Corp transcript. System returns 12% churn risk. Primary: Propose enterprise upgrade this week, confidence 88%. Shows the platform handles positive scenarios too, not just churn.</div>
+</div>
+<div class="demo-card" style="border-color:var(--border-success)">
+  <div class="demo-num">Scenario 3 · memory improvement — this is the money moment</div>
+  <div class="demo-title">TechCorp — at-risk, same pattern as Acme Corp</div>
+  <div class="demo-body">Paste TechCorp transcript (similar churn signals). Memory kicks in: "2 similar cases found (Acme Corp, GlobexQ1)." Confidence boosted from 73% → 89%. The agent trace shows Memory Retrieval node ran. Say: "The platform learned from the Acme Corp case we just resolved." This is the differentiator no other team has.</div>
+</div>

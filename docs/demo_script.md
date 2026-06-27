@@ -1,26 +1,30 @@
-# Meridian — 5-Minute Demo Script
+# Demo Script — Meridian 5-Minute Video
 
-**Total time:** ~5 minutes  
-**Setup required:** Both servers running (`uvicorn` on :8000, `streamlit` on :8501)
+## Setup (Before Recording)
 
----
+```bash
+# Terminal 1 — Start the FastAPI backend
+uvicorn backend.main:app --reload --port 8000
 
-## Before You Start
+# Terminal 2 — Start the Streamlit frontend
+streamlit run frontend/app.py
+```
 
-- Have the browser open at http://localhost:8501
-- Have the three transcripts below ready to paste
 - Run `python scripts/seed_memory.py` first so memory is pre-loaded with the 6 resolved cases
+- Have the browser open at http://localhost:8501
+- Confirm backend health indicator shows green in sidebar
 
 ---
 
-## Scene 1 — Acme Corp (cold start, no memory)
+## Scenario 1 — Cold Start: Acme Corp (At-Risk)
 
-**Time:** 0:00 – 1:45
+**Total time:** 0:00 – 1:45
+
+**Narrator:** "Sarah just got off a difficult call with Acme Corp's VP of Operations. Let's see what Meridian tells her to do."
 
 ### Actions
-1. Open Streamlit at http://localhost:8501
-2. In the sidebar, select **"Acme Corp"** from the Account dropdown
-3. Paste the following transcript into the text area:
+1. Select **"Acme Corp — At Risk"** from the account dropdown
+2. Paste the following transcript:
 
 ```
 Sarah Chen (CSM): Thanks for joining today. I wanted to check in on how things are going with the platform.
@@ -36,30 +40,31 @@ Sarah: We do have a comparison view — I wonder if it's not configured correctl
 Mark: Look, our renewal is in 47 days. If we can't see a real improvement in the next few weeks, I'm going to have to recommend we evaluate alternatives. I've already had a preliminary conversation with a competitor.
 ```
 
-4. Click **Analyse account**
-5. Wait for the spinner to complete (~2–3 seconds with mock, ~8–12 seconds with real agents)
-
-### What to narrate
-> "Sarah just got off a difficult call. She opens Meridian and pastes the transcript. Watch what happens."
+3. Click **Analyse account**
+4. Wait for results (~10–15 seconds with real agents)
 
 ### What to point out
-- **Agent trace** (expanded): 5 agents ran in sequence — planner → analyzer → retriever → assessor → generator
-- **Risk score: 84%** — critical level, 4 signals detected
+- **Agent trace** (right column, expanded): 5 agents ran in sequence — Planner → Interaction Analyzer → Knowledge Retriever → Risk Assessor → NBA Generator
+- **Risk score: 84%. Critical level.** 4 signals detected
 - **Evidence**: The system pulled from the meeting note, the churn prevention playbook, and the EBR guide
-- **Primary recommendation**: "Schedule EBR within 48h" with 73% confidence
-- **No memory panel** — this is a cold start, no similar cases yet
+- **Primary recommendation**: "Schedule Executive Business Review within 48h" with 73% confidence
+- **No memory context** — this is a cold start, no similar cases yet
 
-6. Click **Accept**
-7. Say: "Sarah accepts the recommendation. It's now logged to memory."
+### Action
+Click **✅ Accept**
+
+**Narrator:** "Sarah accepts the recommendation. That decision is now logged to Meridian's episodic memory."
 
 ---
 
-## Scene 2 — Globex Corp (healthy, expansion)
+## Scenario 2 — Contrast: Globex Corp (Healthy)
 
-**Time:** 1:45 – 3:00
+**Total time:** 1:45 – 3:00
+
+**Narrator:** "Now let's show that Meridian handles positive scenarios too, not just churn."
 
 ### Actions
-1. In the sidebar, select **"Globex Corp"**
+1. Select **"Globex Corp — Healthy"** from the dropdown
 2. Paste the following transcript:
 
 ```
@@ -67,7 +72,7 @@ David Kim (CSM): Great to connect, Rachel. The QBR numbers look fantastic this q
 
 Rachel Torres (Head of Operations, Globex Corp): Yes, the team loves the platform. We're at 94% adoption across all five features. Actually, I wanted to ask — we're planning to onboard 3 more business units in Q3. Is there an enterprise tier that would cover that?
 
-David: Absolutely. The enterprise tier includes unlimited seats, dedicated API access, and a dedicated CSM pod. 
+David: Absolutely. The enterprise tier includes unlimited seats, dedicated API access, and a dedicated CSM pod.
 
 Rachel: The API access is key for us — we want to build our own dashboards pulling from your data. What's the timeline to get a scoping call with your technical team?
 
@@ -78,23 +83,22 @@ Rachel: Perfect. And our NPS score is apparently 68 — I hope that earns us a g
 
 3. Click **Analyse account**
 
-### What to narrate
-> "Now let's look at a healthy account. Same system, completely different story."
-
 ### What to point out
-- **Risk score: 12%** — low, only 2 signals (both positive)
+- **Risk score: 12%. Low risk.** Only 2 positive signals
 - **Primary recommendation**: "Propose enterprise upgrade this week" with 88% confidence
 - **No memory panel** — this is an expansion case, memory is calibrated for at-risk scenarios
-- "Meridian doesn't just detect churn — it recognises expansion opportunities and gives the CSM a concrete action with high confidence."
+- "Meridian doesn't just detect churn — it recognizes expansion opportunities and gives the CSM a concrete action with high confidence."
 
 ---
 
-## Scene 3 — TechCorp (memory boost — this is the money moment)
+## Scenario 3 — The Money Moment: TechCorp + Memory
 
-**Time:** 3:00 – 5:00
+**Total time:** 3:00 – 5:00
+
+**Narrator:** "Now here's what makes Meridian different. TechCorp has similar churn signals to Acme Corp. Watch what happens."
 
 ### Actions
-1. In the sidebar, select **"TechCorp"**
+1. Select **"TechCorp — Onboarding"** from the dropdown
 2. Paste the following transcript:
 
 ```
@@ -113,31 +117,31 @@ Marcus: I hope so. Our management signed off on this to improve team efficiency.
 
 3. Click **Analyse account**
 
-### What to narrate
-> "TechCorp has similar risk signals to Acme Corp — struggling setup, low adoption, early churn threat. But watch what's different this time."
-
 ### What to point out
 - **Memory Boost panel appears** — "2 similar cases found: Acme Corp, GlobexQ1"
-- **Base confidence: 73%** → **Boosted confidence: 89%** (delta: +16%)
+- **Base confidence: 73% → Boosted confidence: 89%** (delta: +16%)
 - "The platform remembered what worked with Acme Corp. It resolved in 14 days after an EBR. So for TechCorp, it's recommending the same approach — with higher confidence."
 - Point to the `precedent_accounts` on the primary recommendation card
-- **This is the differentiator**: "Every accepted recommendation makes the next recommendation smarter. This is the memory loop."
+- **"This is the differentiator: Every accepted recommendation makes the next recommendation smarter. This is the memory loop."**
 
-4. Click **Modify**
-5. Type: "Change approach to focus on onboarding support first, EBR in 2 weeks if not resolved"
-6. Click **Submit modification**
-7. Say: "Sarah wants to adjust the recommendation. She submits her feedback, and Meridian re-analyses with the CSM's input factored in."
-8. Show the updated result in session state
+### Action (optional — shows Modify flow)
+1. Click **✏️ Modify**
+2. Type: "Change approach to focus on onboarding support first, EBR in 2 weeks if not resolved"
+3. Click **Confirm Modification**
+4. Say: "Sarah wants to adjust the recommendation. She submits her feedback, and Meridian logs it to episodic memory for future learning."
 
----
-
-## Wrap-Up (optional, if time allows)
-
-- Switch to `docs/ARCHITECTURE.md` in the browser or a code editor
-- Walk through the Mermaid diagram: Streamlit → FastAPI → LangGraph → ChromaDB → SQLite → Claude
-- Say: "Three people, three days, a full decision intelligence platform."
+### Narrator (closing)
+"Sarah isn't guessing anymore. She has the collective intelligence of every case her team has resolved — surfaced automatically, in real time, with a confidence score she can act on. That's Meridian."
 
 ---
+
+## Timing Guide
+- Setup/intro: ~30 seconds
+- Scenario 1 (Acme Corp): ~90 seconds
+- Scenario 2 (Globex Corp): ~60 seconds
+- Scenario 3 (TechCorp + memory): ~90 seconds
+- Wrap-up: ~30 seconds
+- **Total: ~5 minutes**
 
 ## Transcript Cheat Sheet
 
@@ -146,3 +150,12 @@ Marcus: I hope so. Our management signed off on this to improve team efficiency.
 | Acme Corp | 84% — Critical | Schedule EBR within 48h |
 | Globex Corp | 12% — Low | Propose enterprise upgrade |
 | TechCorp | 52% — Medium | Accelerate onboarding with dedicated support |
+
+## Setup Verification Checklist
+
+- [ ] `python scripts/ingest.py` — knowledge_base count >= 80
+- [ ] `python scripts/seed_memory.py` — memory_log count >= 6
+- [ ] `uvicorn backend.main:app --port 8000` — server starts without errors
+- [ ] `streamlit run frontend/app.py` — UI opens in browser
+- [ ] Backend health indicator shows ✅ green in sidebar
+- [ ] GROQ_API_KEY is set in .env

@@ -1,0 +1,12 @@
+{
+  "case_id": "CASE-004",
+  "account_name": "Vector Capital Group",
+  "arr": 132000,
+  "situation_summary": "11-day silence from all account contacts. Renewal in 43 days. Previous CSM had left and account was unassigned for 3 weeks. Health score at 38.",
+  "risk_signals": ["silence > 10 days", "unassigned account gap", "renewal < 60 days", "health score 38", "no active automation workflows"],
+  "action_taken": "Immediate re-assignment to senior CSM. VP CS cold email to CEO. EBR scheduled within 5 days of re-engagement. Re-onboarding session for power users. Reporting module configured live.",
+  "outcome": "Renewed at same ARR. CEO personally thanked VP CS for outreach. Account health stabilized at 61.",
+  "days_to_resolution": 21,
+  "renewal_achieved": true,
+  "csm_notes": "The VP CS cold email broke the silence. Customers who aren't responding to CSM often respond to senior leadership. Don't wait — escalate the outreach if silence exceeds 10 days near renewal."
+}

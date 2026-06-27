@@ -1,0 +1,13 @@
+{
+  "account_name": "Test Account",
+  "arr": 100000,
+  "industry": "Software",
+  "contract_end": "2026-12-31",
+  "csm": "Alex Smith",
+  "health_score_history": [80, 75, 70],
+  "daily_active_users": 50,
+  "last_login_date": "2026-06-25",
+  "features_adopted": ["dashboard"],
+  "open_tickets": 3,
+  "nps_score": 45
+}

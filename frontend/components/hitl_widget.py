@@ -1,43 +1,107 @@
+"""
+HITL (Human-in-the-Loop) widget — Accept / Modify / Reject buttons with notes.
+Calls POST /feedback on the backend API.
+"""
 import streamlit as st
 import httpx
 import os
 
-API_URL = os.getenv("API_URL", "http://localhost:8000")
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
 
-def render_hitl_widget(result: dict, account_id: str):
-    st.subheader("Human-in-the-Loop")
-    c1, c2, c3 = st.columns(3)
-    req_id = result["request_id"]
-    payload = {
-        "request_id": req_id,
-        "account_id": account_id,
-        "risk_score": result["risk_score"],
-        "risk_level": result["risk_level"],
-        "recommendation_title": result["primary_recommendation"]["title"]
-    }
-    if c1.button("Accept", use_container_width=True):
-        httpx.post(f"{API_URL}/feedback", json={**payload, "decision": "accept", "modification_notes": ""})
-        st.success("Accepted and logged to memory.")
-    if c2.button("Reject", use_container_width=True):
-        httpx.post(f"{API_URL}/feedback", json={**payload, "decision": "reject", "modification_notes": ""})
-        st.error("Rejected and logged.")
-    if c3.button("Modify", use_container_width=True):
-        st.session_state["show_modify"] = True
-
-    if st.session_state.get("show_modify"):
-        notes = st.text_area(
-            "What would you like to change?",
-            placeholder="e.g., Change primary action to onboarding check-in"
+def _submit_feedback(
+    request_id: str,
+    decision: str,
+    notes: str | None,
+    decision_key: str,
+    submitted_key: str,
+) -> None:
+    try:
+        resp = httpx.post(
+            f"{BACKEND_URL}/feedback",
+            json={
+                "request_id": request_id,
+                "decision": decision,
+                "modification_notes": notes,
+            },
+            timeout=10.0,
         )
-        if st.button("Submit modification"):
-            httpx.post(f"{API_URL}/feedback", json={**payload, "decision": "modify", "modification_notes": notes})
-            st.info("Modification logged. Re-analyzing with feedback...")
-            new_text = st.session_state.get("transcript", "") + "\n\n" + "[CSM Feedback: " + notes + "]"
-            r = httpx.post(
-                f"{API_URL}/analyze",
-                json={"account_id": account_id, "interaction_text": new_text},
-                timeout=120.0
+        resp.raise_for_status()
+        st.session_state[decision_key] = decision
+        st.session_state[submitted_key] = True
+        st.rerun()
+    except Exception as e:
+        st.error(f"Failed to log feedback: {e}")
+
+
+def render_hitl(request_id: str) -> None:
+    """Render the HITL decision widget for a given request_id."""
+    if not request_id:
+        return
+
+    st.markdown("---")
+    st.markdown("### 👤 Your Decision")
+
+    # Track state in session
+    decision_key = f"decision_{request_id}"
+    notes_key = f"notes_{request_id}"
+    submitted_key = f"submitted_{request_id}"
+
+    if st.session_state.get(submitted_key):
+        decision = st.session_state.get(decision_key, "")
+        icons = {"accepted": "✅", "modified": "✏️", "rejected": "❌"}
+        st.success(
+            f"{icons.get(decision, '✅')} Decision logged: **{decision.upper()}**"
+        )
+        return
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        accept = st.button(
+            "✅ Accept",
+            key=f"accept_{request_id}",
+            use_container_width=True,
+            type="primary",
+        )
+    with col2:
+        modify = st.button(
+            "✏️ Modify",
+            key=f"modify_{request_id}",
+            use_container_width=True,
+        )
+    with col3:
+        reject = st.button(
+            "❌ Reject",
+            key=f"reject_{request_id}",
+            use_container_width=True,
+        )
+
+    # Show notes field for modify
+    show_notes = st.session_state.get(f"show_notes_{request_id}", False)
+
+    if modify:
+        st.session_state[f"show_notes_{request_id}"] = True
+        show_notes = True
+
+    if show_notes:
+        modification_notes = st.text_area(
+            "Modification notes",
+            key=f"mod_notes_{request_id}",
+            placeholder="Describe what you'd change about this recommendation...",
+            height=80,
+        )
+        confirm_modify = st.button(
+            "Confirm Modification",
+            key=f"confirm_mod_{request_id}",
+            type="primary",
+        )
+        if confirm_modify:
+            _submit_feedback(
+                request_id, "modified", modification_notes, decision_key, submitted_key
             )
-            st.session_state["result"] = r.json()
-            st.rerun()
+
+    if accept:
+        _submit_feedback(request_id, "accepted", "", decision_key, submitted_key)
+    elif reject:
+        _submit_feedback(request_id, "rejected", "", decision_key, submitted_key)
