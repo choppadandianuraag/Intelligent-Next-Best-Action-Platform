@@ -1,0 +1,13 @@
+{
+  "account_name": "BlueWave Tech",
+  "arr": 62000,
+  "industry": "Technology",
+  "contract_end": "2026-09-30",
+  "csm": "Marcus Reid",
+  "health_score_history": [65, 60, 58, 52, 49],
+  "daily_active_users": 28,
+  "last_login_date": "2026-06-18",
+  "features_adopted": ["dashboard", "alerts", "reporting"],
+  "open_tickets": 5,
+  "nps_score": 31
+}

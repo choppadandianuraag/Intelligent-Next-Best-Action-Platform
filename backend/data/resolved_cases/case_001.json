@@ -1,0 +1,12 @@
+{
+  "case_id": "CASE-001",
+  "account_name": "Globex Corp",
+  "arr": 120000,
+  "situation_summary": "Champion left the company, renewal at risk 60 days out. DAU dropped 40%. No exec sponsor engaged.",
+  "risk_signals": ["champion departure", "no exec sponsor", "silence > 10 days", "DAU drop > 40%"],
+  "action_taken": "Executive business review with new CTO. ROI analysis presented. New champion identified and enabled.",
+  "outcome": "Renewed with 15% expansion ($18K). New champion emerged. Health score recovered to 74.",
+  "days_to_resolution": 14,
+  "renewal_achieved": true,
+  "csm_notes": "EBR was the turning point. Lead with owned accountability, then present quantified ROI. Executive sponsorship from CTO was critical. Ensure exec-level contacts for at-risk accounts."
+}
