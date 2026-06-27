@@ -1,90 +1,118 @@
 """
-Interaction Analyzer agent — prompts Groq to extract signals from transcript.
-Returns signals: list[dict] each with text, type (risk|positive|neutral), severity (high|medium|low).
+Interaction Analyzer agent.
+
+Extracts structured signals (risk, positive, neutral) from a raw meeting
+transcript using an LLM (Groq via OpenAI-compatible client).
+This is the first specialist agent in the LangGraph pipeline.
 """
+
 import json
-import os
 import time
+from typing import List, Dict
 
-from groq import Groq
-from dotenv import load_dotenv
+from backend.agents.llm_client import call_llm
 
-from backend.models.schemas import AgentStep
-
-load_dotenv()
-
-MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
-_client = None
+VALID_TYPES = {"risk", "positive", "neutral"}
+VALID_SEVERITIES = {"high", "medium", "low"}
 
 
-def _get_client() -> Groq:
-    global _client
-    if _client is None:
-        _client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-    return _client
-
-
-SYSTEM_PROMPT = """You are an expert customer success analyst. Your job is to extract signals from a customer meeting transcript.
-
-Analyze the transcript and return a JSON array of signals. Each signal must have:
-- "text": a concise description of the signal (1-2 sentences)
-- "type": one of "risk", "positive", "neutral"
-- "severity": one of "high", "medium", "low"
-
-Focus on:
-- Churn threats, competitor mentions, ROI questions (risk/high)
-- Support ticket complaints, adoption gaps (risk/medium)
-- Positive sentiment, expansion interest, NPS mentions (positive)
-- Champion changes, executive engagement or disengagement (varies)
-
-Return ONLY a valid JSON array. No explanation, no markdown fences."""
-
-
-def interaction_analyzer_node(state: dict) -> dict:
-    start = time.time()
-    raw_input = state.get("raw_input", "")
-
-    prompt = f"Extract signals from this customer meeting transcript:\n\n{raw_input}"
-
-    try:
-        response = _get_client().chat.completions.create(
-            model=MODEL,
-            max_tokens=1024,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": prompt}
-            ],
-        )
-        content = response.choices[0].message.content.strip()
-        # Strip markdown fences if present
-        if content.startswith("```"):
-            content = content.split("```")[1]
-            if content.startswith("json"):
-                content = content[4:]
-        signals = json.loads(content)
-    except Exception as e:
-        signals = [
-            {
-                "text": f"Signal extraction failed: {str(e)}",
-                "type": "neutral",
-                "severity": "low",
-            }
-        ]
-
-    duration_ms = int((time.time() - start) * 1000)
-
-    step = AgentStep(
-        agent_name="Interaction Analyzer",
-        action=f"Extracted {len(signals)} signals from transcript",
-        reasoning=(
-            f"Analyzed {len(raw_input.split())} words of transcript. "
-            f"Found {sum(1 for s in signals if s.get('type') == 'risk')} risk signals, "
-            f"{sum(1 for s in signals if s.get('type') == 'positive')} positive signals."
-        ),
-        duration_ms=duration_ms,
+def _build_prompt(transcript: str) -> str:
+    """Build the LLM prompt for signal extraction."""
+    return (
+        "You are a customer success signal extractor. Read the following meeting transcript "
+        "and extract all meaningful signals.\n"
+        "For each signal, return: text (exact quote or paraphrase), "
+        "type (risk, positive, or neutral), severity (high, medium, low).\n"
+        "Return ONLY a JSON list. No markdown fences.\n\n"
+        f"Transcript:\n{transcript}"
     )
 
-    agent_trace = state.get("agent_trace", [])
-    agent_trace.append(step.model_dump())
 
-    return {**state, "signals": signals, "agent_trace": agent_trace}
+def _strip_fences(raw: str) -> str:
+    """Strip markdown code fences from the response string."""
+    cleaned = raw.strip()
+    if cleaned.startswith("```"):
+        lines = cleaned.split("\n", 1)
+        if len(lines) > 1:
+            cleaned = lines[1]
+        # Remove trailing fence
+        if cleaned.endswith("```"):
+            cleaned = cleaned[:-3]
+        elif "```" in cleaned:
+            cleaned = cleaned.rsplit("```", 1)[0]
+        cleaned = cleaned.strip()
+    return cleaned
+
+
+def _validate_signals(signals: list) -> List[Dict]:
+    """
+    Validate that signals is a list of dicts with the required keys
+    and valid values.
+    """
+    if not isinstance(signals, list):
+        raise ValueError("Response is not a JSON list")
+
+    validated = []
+    for item in signals:
+        if not isinstance(item, dict):
+            raise ValueError(f"Signal is not a dict: {item}")
+        if "text" not in item:
+            raise ValueError(f"Signal missing 'text' key: {item}")
+        if "type" not in item:
+            raise ValueError(f"Signal missing 'type' key: {item}")
+        if "severity" not in item:
+            raise ValueError(f"Signal missing 'severity' key: {item}")
+        if item["type"] not in VALID_TYPES:
+            raise ValueError(
+                f"Invalid signal type '{item['type']}'. Must be one of {VALID_TYPES}"
+            )
+        if item["severity"] not in VALID_SEVERITIES:
+            raise ValueError(
+                f"Invalid severity '{item['severity']}'. Must be one of {VALID_SEVERITIES}"
+            )
+        validated.append(item)
+
+    return validated
+
+
+def analyze(state: dict) -> dict:
+    """
+    Interaction Analyzer node: extracts risk/positive/neutral signals
+    from the meeting transcript and stores them in state['signals'].
+
+    Args:
+        state: LangGraph state dict containing 'raw_input' (the transcript).
+
+    Returns:
+        Dict with 'signals' (list of signal dicts) and 'agent_trace' (updated).
+    """
+    start = time.time()
+
+    transcript = state.get("raw_input", "")
+    prompt = _build_prompt(transcript)
+
+    signals = []
+    action = "extracted_signals"
+    reasoning = ""
+
+    try:
+        raw_response = call_llm(prompt, max_tokens=1024, temperature=0)
+        cleaned = _strip_fences(raw_response)
+        parsed = json.loads(cleaned)
+        signals = _validate_signals(parsed)
+        reasoning = f"Found {len(signals)} signals"
+    except Exception as e:
+        signals = []
+        action = "extraction_failed"
+        reasoning = f"Extraction failed: {str(e)}"
+
+    duration_ms = max(1, int((time.time() - start) * 1000))
+
+    state["agent_trace"].append({
+        "agent_name": "interaction_analyzer",
+        "action": action,
+        "reasoning": reasoning,
+        "duration_ms": duration_ms,
+    })
+
+    return {"signals": signals, "agent_trace": state["agent_trace"]}

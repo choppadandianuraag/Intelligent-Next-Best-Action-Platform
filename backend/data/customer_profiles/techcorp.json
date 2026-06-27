@@ -9,5 +9,7 @@
   "last_login_date": "2026-06-22",
   "features_adopted": ["dashboard", "alerts"],
   "open_tickets": 3,
-  "nps_score": 44
+  "nps_score": 44,
+  "risk_score": 0.52,
+  "risk_level": "medium"
 }

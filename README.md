@@ -10,14 +10,13 @@ Meridian analyzes customer meeting transcripts and CRM data through a 5-agent La
 
 ### 1. Install dependencies
 ```bash
-cd meridian
 pip install -r requirements.txt
 ```
 
 ### 2. Set environment variables
 ```bash
 cp .env.example .env
-# Edit .env and set ANTHROPIC_API_KEY
+# Edit .env and set GROQ_API_KEY=your_key_here
 ```
 
 ### 3. Ingest knowledge base
@@ -56,7 +55,46 @@ streamlit run frontend/app.py
 
 ---
 
-## Repository Structure
+## Usage
+
+1. Select an account from the sidebar dropdown
+2. Paste a meeting transcript into the text area
+3. Click **Analyse account**
+4. Review the agent trace, risk assessment, evidence, and primary recommendation
+5. Click **Accept**, **Reject**, or **Modify** to log your decision to memory
+
+---
+
+## API Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/analyze` | Run the agent pipeline on a transcript |
+| `POST` | `/feedback` | Log a CSM decision to episodic memory |
+| `GET` | `/health` | Health check |
+
+API docs available at http://localhost:8000/docs
+
+### `POST /analyze`
+```json
+Request:  { "account_id": "acme_corp", "interaction_text": "..." }
+Response: RecommendationOutput (see schemas.py)
+```
+
+### `POST /feedback`
+```json
+Request:  { "request_id": "...", "decision": "accepted|modified|rejected", "modification_notes": "..." }
+Response: { "status": "logged", "request_id": "...", "decision": "..." }
+```
+
+### `GET /health`
+```json
+Response: { "status": "ok" }
+```
+
+---
+
+## Project Structure
 
 ```
 meridian/
@@ -65,9 +103,9 @@ meridian/
 │   ├── agents/
 │   │   ├── graph.py               # LangGraph StateGraph + run() entrypoint
 │   │   ├── planner.py             # Agent 1: schedule execution plan
-│   │   ├── interaction_analyzer.py # Agent 2: extract signals via Claude
+│   │   ├── interaction_analyzer.py # Agent 2: extract signals via Groq/llama
 │   │   ├── knowledge_retriever.py # Agent 3: ChromaDB semantic search
-│   │   ├── risk_assessor.py       # Agent 4: Claude risk scoring 0-100%
+│   │   ├── risk_assessor.py       # Agent 4: rule-based risk scoring 0-100%
 │   │   └── nba_generator.py       # Agent 5: generate recommendations + memory boost
 │   ├── memory/
 │   │   ├── vector_store.py        # ChromaDB wrapper (knowledge_base + resolved_cases)
@@ -90,31 +128,10 @@ meridian/
 │   ├── ingest.py                  # Embed all data/ docs into ChromaDB
 │   └── seed_memory.py             # Pre-load resolved_cases into episodic memory
 ├── tests/
-│   └── eval_scenarios.py          # 5-case eval with expected outputs
+│   └── eval_scenarios.py          # 3-case eval with expected outputs
 └── docs/
     ├── ARCHITECTURE.md
     └── demo_script.md
-```
-
----
-
-## API Reference
-
-### `POST /analyze`
-```json
-Request:  { "account_id": "acme_corp", "interaction_text": "..." }
-Response: RecommendationOutput (see schemas.py)
-```
-
-### `POST /feedback`
-```json
-Request:  { "request_id": "...", "decision": "accepted|modified|rejected", "modification_notes": "..." }
-Response: { "status": "logged", "request_id": "...", "decision": "..." }
-```
-
-### `GET /health`
-```json
-Response: { "status": "ok" }
 ```
 
 ---
@@ -130,8 +147,8 @@ pytest tests/eval_scenarios.py -v
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `ANTHROPIC_API_KEY` | — | Required. Your Anthropic API key |
-| `ANTHROPIC_MODEL` | `claude-3-5-sonnet-20241022` | Claude model to use |
+| `GROQ_API_KEY` | — | Required. Your Groq API key |
+| `GROQ_MODEL` | `llama-3.3-70b-versatile` | Groq model to use |
 | `CHROMA_PERSIST_DIR` | `backend/data/chroma_db` | ChromaDB persistence path |
 | `EPISODIC_DB_PATH` | `./episodic_memory.db` | SQLite database path |
 | `BACKEND_URL` | `http://localhost:8000` | Used by Streamlit frontend |
@@ -140,6 +157,27 @@ pytest tests/eval_scenarios.py -v
 
 ## Team
 
-- **P1 — AI/Agents Lead:** schemas · graph · 5 agents
-- **P2 — Data/Memory Lead:** data files · vector_store · episodic · scripts
-- **P3 — Frontend/Demo Lead:** FastAPI · Streamlit · components · docs
+| Person | Role | Responsibilities |
+|--------|------|-----------------|
+| P1 | AI / Agents Lead | Pydantic schemas, LangGraph graph, 5 agents, prompt tuning |
+| P2 | Data / Memory Lead | Sample data, ChromaDB ingestion, SQLite episodic memory |
+| P3 | Frontend / Demo Lead | FastAPI server, Streamlit UI, architecture docs, demo |
+
+---
+
+## Architecture
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full system diagram and agent pipeline documentation.
+
+---
+
+## Tech Stack
+
+- **LangGraph** — multi-agent state machine
+- **Groq llama-3.3-70b-versatile** — LLM for signal extraction, risk assessment, and NBA generation
+- **ChromaDB** — vector store for knowledge base retrieval
+- **SQLite** — episodic memory for CSM decision history
+- **FastAPI** — REST API server
+- **Streamlit** — interactive frontend
+- **Pydantic v2** — data validation and schema contracts
+- **sentence-transformers** — local text embeddings (all-MiniLM-L6-v2)

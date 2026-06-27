@@ -1,5 +1,10 @@
-import sqlite3
+"""
+SQLite-based episodic memory for Meridian.
+Stores and retrieves past feedback decisions for confidence boosting.
+"""
+
 import os
+import sqlite3
 from backend.models.schemas import MemoryContext
 
 DB_PATH = os.getenv("EPISODIC_DB_PATH", "./episodic_memory.db")

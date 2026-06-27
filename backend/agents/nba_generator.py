@@ -1,190 +1,270 @@
-"""
-NBA Generator agent — generates primary recommendation + 2 alternatives.
-Applies memory confidence boost from knowledge_retriever's memory_context.
-"""
 import json
-import os
 import time
-import uuid
+from typing import Optional
 
-from groq import Groq
-from dotenv import load_dotenv
-
-from backend.models.schemas import AgentStep, Action
-
-load_dotenv()
-
-MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
-_client = None
+from backend.memory.episodic import EpisodicMemory
+from backend.models.schemas import AgentStep
 
 
-def _get_client() -> Groq:
-    global _client
-    if _client is None:
-        _client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-    return _client
+# ---------------------------------------------------------------------------
+# Model abstraction — swap this out when your open-source model is ready
+# ---------------------------------------------------------------------------
+def _call_model(risk: dict, knowledge: list, memory_context: dict) -> Optional[str]:
+    """
+    Stub: rule-based NBA generation so the pipeline runs end-to-end
+    without a real model. Replace with your open-source model later.
+    """
+    risk_level = risk.get("risk_level", "medium")
+    risk_score = risk.get("risk_score", 0.5)
+    signal_count = risk.get("signal_count", 0)
+    risk_factors = risk.get("risk_factors", [])
 
+    has_memory = memory_context.get("similar_cases_found", 0) > 0
+    precedent_accounts = memory_context.get("precedent_accounts", [])
 
-SYSTEM_PROMPT = """You are an expert customer success strategist. Given a full risk assessment, extracted signals, and knowledge base context, generate next-best-action recommendations.
+    # Determine primary recommendation based on risk level
+    if risk_level == "critical":
+        primary = {
+            "title": "Schedule Executive Business Review (EBR)",
+            "description": (
+                f"Account is at critical risk (score: {risk_score}). "
+                "Schedule an Executive Business Review within 48 hours to address "
+                "the identified risk factors and prevent churn."
+            ),
+            "confidence": 0.73,
+            "estimated_impact": "High — addresses critical churn risk head-on",
+            "evidence_ids": list(dict.fromkeys(rf for rf in risk_factors[:3] if rf)) or ["ev_0"],
+            "precedent_accounts": precedent_accounts,
+        }
+        alternatives = [
+            {
+                "title": "Send executive escalation to VP of Customer Success",
+                "description": (
+                    "Escalate the situation to leadership with a full risk report "
+                    "and proposed intervention plan."
+                ),
+                "confidence": 0.60,
+                "estimated_impact": "Medium — ensures leadership visibility",
+                "evidence_ids": list(dict.fromkeys(rf for rf in risk_factors[:2] if rf)) or ["ev_0"],
+                "precedent_accounts": precedent_accounts,
+            },
+            {
+                "title": "Conduct technical deep-dive session",
+                "description": (
+                    "Schedule a technical session to address product adoption gaps "
+                    "and demonstrate value of unused features."
+                ),
+                "confidence": 0.55,
+                "estimated_impact": "Medium — may improve product adoption",
+                "evidence_ids": list(dict.fromkeys(rf for rf in risk_factors[:1] if rf)) or ["ev_0"],
+                "precedent_accounts": precedent_accounts,
+            },
+        ]
+    elif risk_level == "high":
+        primary = {
+            "title": "Schedule targeted intervention call",
+            "description": (
+                f"Account shows high risk (score: {risk_score}). Schedule a focused "
+                "intervention call with the CSM to address specific concerns and "
+                "present a remediation plan."
+            ),
+            "confidence": 0.73,
+            "estimated_impact": "High — addresses risk before it escalates",
+            "evidence_ids": list(dict.fromkeys(rf for rf in risk_factors[:3] if rf)) or ["ev_0"],
+            "precedent_accounts": precedent_accounts,
+        }
+        alternatives = [
+            {
+                "title": "Prepare custom success plan with milestones",
+                "description": "Create a tailored success plan with measurable milestones to rebuild confidence.",
+                "confidence": 0.62,
+                "estimated_impact": "Medium — provides structured path forward",
+                "evidence_ids": list(dict.fromkeys(rf for rf in risk_factors[:2] if rf)) or ["ev_0"],
+                "precedent_accounts": precedent_accounts,
+            },
+            {
+                "title": "Offer discounted renewal with value-add services",
+                "description": "Propose a renewal package with additional services at a discount to retain the account.",
+                "confidence": 0.50,
+                "estimated_impact": "Medium — financial incentive to stay",
+                "evidence_ids": list(dict.fromkeys(rf for rf in risk_factors[:1] if rf)) or ["ev_0"],
+                "precedent_accounts": precedent_accounts,
+            },
+        ]
+    elif risk_level == "medium":
+        primary = {
+            "title": "Schedule Quarterly Business Review (QBR)",
+            "description": (
+                f"Account shows moderate risk (score: {risk_score}). Schedule a QBR "
+                "to review performance, address concerns, and identify expansion opportunities."
+            ),
+            "confidence": 0.73,
+            "estimated_impact": "Medium — maintains relationship and identifies opportunities",
+            "evidence_ids": list(dict.fromkeys(rf for rf in risk_factors[:2] if rf)) or ["ev_0"],
+            "precedent_accounts": precedent_accounts,
+        }
+        alternatives = [
+            {
+                "title": "Conduct health check survey",
+                "description": "Send a customer health check survey to gather more data on satisfaction levels.",
+                "confidence": 0.55,
+                "estimated_impact": "Low — provides additional signal data",
+                "evidence_ids": list(dict.fromkeys(rf for rf in risk_factors[:1] if rf)) or ["ev_0"],
+                "precedent_accounts": precedent_accounts,
+            },
+            {
+                "title": "Share relevant playbook articles",
+                "description": "Share playbook articles addressing the identified risk factors with the customer.",
+                "confidence": 0.45,
+                "estimated_impact": "Low — educational value, limited direct impact",
+                "evidence_ids": list(dict.fromkeys(rf for rf in risk_factors[:1] if rf)) or ["ev_0"],
+                "precedent_accounts": precedent_accounts,
+            },
+        ]
+    else:  # low risk
+        primary = {
+            "title": "Propose enterprise upgrade or expansion",
+            "description": (
+                f"Account is healthy (score: {risk_score}, {signal_count} positive signals). "
+                "Propose an enterprise upgrade, expansion to new teams, or API access "
+                "to capitalize on engagement."
+            ),
+            "confidence": 0.73,
+            "estimated_impact": "High — captures expansion opportunity",
+            "evidence_ids": list(dict.fromkeys(rf for rf in risk_factors[:2] if rf)) or ["ev_0"],
+            "precedent_accounts": precedent_accounts,
+        }
+        alternatives = [
+            {
+                "title": "Request customer referral or case study",
+                "description": "Ask the satisfied customer for a referral or case study to drive new business.",
+                "confidence": 0.60,
+                "estimated_impact": "Medium — generates pipeline and social proof",
+                "evidence_ids": list(dict.fromkeys(rf for rf in risk_factors[:1] if rf)) or ["ev_0"],
+                "precedent_accounts": precedent_accounts,
+            },
+            {
+                "title": "Schedule product roadmap review",
+                "description": "Share upcoming product roadmap and gather feedback on future priorities.",
+                "confidence": 0.55,
+                "estimated_impact": "Medium — strengthens partnership and alignment",
+                "evidence_ids": list(dict.fromkeys(rf for rf in risk_factors[:1] if rf)) or ["ev_0"],
+                "precedent_accounts": precedent_accounts,
+            },
+        ]
 
-Return a JSON object with exactly this structure:
-{
-  "primary": {
-    "title": "<action title, max 10 words>",
-    "description": "<detailed description of the action, 2-4 sentences>",
-    "confidence": <float 0.0-1.0>,
-    "estimated_impact": "<e.g., 'High — directly addresses churn threat and restores exec relationship'>",
-    "evidence_ids": [],
-    "precedent_accounts": []
-  },
-  "alternatives": [
-    {
-      "title": "<alternative 1 title>",
-      "description": "<description>",
-      "confidence": <float>,
-      "estimated_impact": "<impact>",
-      "evidence_ids": [],
-      "precedent_accounts": []
-    },
-    {
-      "title": "<alternative 2 title>",
-      "description": "<description>",
-      "confidence": <float>,
-      "estimated_impact": "<impact>",
-      "evidence_ids": [],
-      "precedent_accounts": []
+    result = {
+        "primary": primary,
+        "alternatives": alternatives,
     }
-  ]
-}
-
-Base confidence on the strength of evidence. For high-risk accounts: primary should target the most urgent intervention.
-Return ONLY valid JSON. No markdown fences."""
+    return json.dumps(result)
 
 
-def nba_generator_node(state: dict) -> dict:
+def _parse_recommendations(raw: str) -> dict:
+    """Strip markdown fences and parse JSON recommendations."""
+    cleaned = raw.strip()
+    if cleaned.startswith("```"):
+        cleaned = cleaned.split("\n", 1)[-1]
+        cleaned = cleaned.rsplit("```", 1)[0]
+        cleaned = cleaned.strip()
+
+    parsed = json.loads(cleaned)
+    if "primary" not in parsed:
+        raise ValueError("Missing 'primary' key in recommendations")
+    if "alternatives" not in parsed:
+        raise ValueError("Missing 'alternatives' key in recommendations")
+    if not isinstance(parsed["alternatives"], list) or len(parsed["alternatives"]) < 2:
+        raise ValueError("Need at least 2 alternatives")
+    return parsed
+
+
+def generate(state: dict) -> dict:
+    """
+    NBA Generator node: produces 3 next-best-action recommendations
+    (1 primary + 2 alternatives) with confidence scoring and memory boost.
+    """
     start = time.time()
-    signals = state.get("signals", [])
+
     risk = state.get("risk", {})
-    knowledge_chunks = state.get("knowledge_chunks", [])
-    memory_context = state.get("memory_context")
-    customer_profile = state.get("customer_profile", {})
+    knowledge = state.get("knowledge_chunks", [])
+    risk_level = risk.get("risk_level", "medium")
+    risk_score = risk.get("risk_score", 0.5)
 
-    signals_text = "\n".join(
-        f"- [{s.get('type', 'neutral').upper()}/{s.get('severity', 'low').upper()}] {s.get('text', '')}"
-        for s in signals
+    # Get memory context from episodic memory
+    memory = EpisodicMemory()
+    memory_context = memory.get_memory_context(
+        risk_level=risk_level, risk_score=risk_score
     )
-    kb_text = "\n".join(
-        f"- {c.get('excerpt', '')[:300]}" for c in knowledge_chunks[:4]
+
+    prompt = (
+        "You are a customer success strategist. Given the risk assessment, "
+        "knowledge, and past resolved cases, recommend 3 actions.\n"
+        "Return ONLY JSON with keys: primary (Action), alternatives (list of 2 Actions).\n"
+        "Action schema: {title, description, confidence (0.0-1.0), estimated_impact, "
+        "evidence_ids, precedent_accounts}\n\n"
+        f"Risk: {json.dumps(risk, indent=2)}\n"
+        f"Knowledge: {json.dumps(knowledge, indent=2)}\n"
+        f"Memory: {json.dumps(memory_context.model_dump(), indent=2)}"
     )
-    memory_note = ""
-    if memory_context:
-        mc = memory_context
-        memory_note = (
-            f"\nMemory context: {mc['similar_cases_found']} similar resolved cases found "
-            f"({', '.join(mc['precedent_accounts'])}). "
-            f"These cases were successfully resolved with: executive business reviews and structured re-engagement."
-        )
-
-    profile_text = (
-        f"Account: {customer_profile.get('account_name', 'Unknown')}, "
-        f"CSM: {customer_profile.get('csm', 'Unknown')}, "
-        f"ARR: ${customer_profile.get('arr', 0):,}"
-    ) if customer_profile else ""
-
-    prompt = f"""Generate next-best-action recommendations.
-
-{profile_text}
-
-Risk assessment:
-- Level: {risk.get('level', 'unknown').upper()}
-- Score: {risk.get('score', 0.5):.0%}
-- Key signals: {', '.join(risk.get('key_signals', [])[:3])}
-
-Signals:
-{signals_text}
-
-Knowledge base context:
-{kb_text}
-{memory_note}"""
 
     try:
-        response = _get_client().chat.completions.create(
-            model=MODEL,
-            max_tokens=1024,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": prompt}
-            ],
-            response_format={"type": "json_object"}
-        )
-        content = response.choices[0].message.content.strip()
-        if content.startswith("```"):
-            content = content.split("```")[1]
-            if content.startswith("json"):
-                content = content[4:]
-        recs = json.loads(content)
+        raw_response = _call_model(risk, knowledge, memory_context.model_dump())
+        parsed = _parse_recommendations(raw_response)
+
+        primary = parsed["primary"]
+        alternatives = parsed["alternatives"]
+
+        # Apply memory confidence boost formula
+        base_confidence = primary.get("confidence", 0.73)
+        similar_count = memory_context.similar_cases_found
+        boosted = min(base_confidence * (1 + 0.06 * similar_count), 0.97)
+        primary["confidence"] = round(boosted, 3)
+        primary["precedent_accounts"] = memory_context.precedent_accounts
+        for alt in alternatives:
+            alt["precedent_accounts"] = memory_context.precedent_accounts
+
+        reasoning = f"Primary: {primary['title']}, confidence: {primary['confidence']}"
+
     except Exception as e:
-        recs = {
-            "primary": {
-                "title": "Schedule Executive Business Review",
-                "description": f"Escalate to EBR given current risk level. ({e})",
-                "confidence": 0.73,
-                "estimated_impact": "High",
+        primary = {
+            "title": "Schedule follow-up call",
+            "description": "A follow-up call is recommended to better understand customer needs and address any concerns.",
+            "confidence": 0.5,
+            "estimated_impact": "Medium",
+            "evidence_ids": [],
+            "precedent_accounts": [],
+        }
+        alternatives = [
+            {
+                "title": "Send customer satisfaction survey",
+                "description": "Gather feedback through a structured survey to identify areas for improvement.",
+                "confidence": 0.4,
+                "estimated_impact": "Low",
                 "evidence_ids": [],
                 "precedent_accounts": [],
             },
-            "alternatives": [
-                {
-                    "title": "Escalate open support tickets",
-                    "description": "Triage all open tickets to P1 and resolve within 48h.",
-                    "confidence": 0.65,
-                    "estimated_impact": "Medium",
-                    "evidence_ids": [],
-                    "precedent_accounts": [],
-                },
-                {
-                    "title": "Send proactive ROI report",
-                    "description": "Build and send a custom ROI analysis within 24h.",
-                    "confidence": 0.58,
-                    "estimated_impact": "Medium",
-                    "evidence_ids": [],
-                    "precedent_accounts": [],
-                },
-            ],
-        }
+            {
+                "title": "Share product documentation",
+                "description": "Share relevant documentation and resources to help the customer get more value.",
+                "confidence": 0.3,
+                "estimated_impact": "Low",
+                "evidence_ids": [],
+                "precedent_accounts": [],
+            },
+        ]
+        reasoning = f"Recommendation generation failed: {str(e)}"
 
-    # Apply memory confidence boost
-    if memory_context and memory_context.get("similar_cases_found", 0) > 0:
-        mc = memory_context
-        boost = mc.get("confidence_boost", 0.0)
-        primary = recs["primary"]
-        base_conf = primary.get("confidence", 0.73)
-        primary["confidence"] = round(min(base_conf + boost, 0.97), 3)
-        primary["precedent_accounts"] = mc.get("precedent_accounts", [])
+    duration_ms = max(1, round((time.time() - start) * 1000))
 
-    # Attach evidence IDs from knowledge chunks
-    ev_ids = [c.get("id", str(uuid.uuid4())) for c in knowledge_chunks[:3]]
-    recs["primary"]["evidence_ids"] = ev_ids
+    step = {
+        "agent_name": "nba_generator",
+        "action": "generated_recommendations",
+        "reasoning": reasoning,
+        "duration_ms": duration_ms,
+    }
+    state["agent_trace"].append(step)
 
-    duration_ms = int((time.time() - start) * 1000)
-    primary = recs["primary"]
-    boost_note = ""
-    if memory_context and memory_context.get("similar_cases_found", 0) > 0:
-        mc = memory_context
-        boost_note = f" Memory boosted confidence from {mc['base_confidence']:.0%} → {primary['confidence']:.0%}."
-
-    step = AgentStep(
-        agent_name="NBA Generator",
-        action=f"Generated primary recommendation: '{primary['title']}'",
-        reasoning=(
-            f"Based on {risk.get('level', 'unknown')} risk ({risk.get('score', 0):.0%}), "
-            f"recommended '{primary['title']}' with {primary['confidence']:.0%} confidence."
-            + boost_note
-        ),
-        duration_ms=duration_ms,
-    )
-
-    agent_trace = state.get("agent_trace", [])
-    agent_trace.append(step.model_dump())
-
-    return {**state, "recommendations": recs, "agent_trace": agent_trace}
+    return {
+        "recommendations": {"primary": primary, "alternatives": alternatives},
+        "agent_trace": state["agent_trace"],
+    }

@@ -8,7 +8,7 @@ from sentence_transformers import SentenceTransformer
 
 
 class VectorStore:
-    def __init__(self, persist_dir: str = "./chroma_db"):
+    def __init__(self, persist_dir: str = "backend/data/chroma_db"):
         self.client = chromadb.PersistentClient(path=persist_dir)
         self.model = SentenceTransformer("all-MiniLM-L6-v2")
         self._get_or_create("knowledge_base")

@@ -52,7 +52,7 @@ def render_memory_context(memory_context: dict | None) -> None:
         st.metric("Base Confidence", f"{int(base * 100)}%")
     with col2:
         st.markdown(
-            f'<div style="text-align:center;font-size:1.5rem;padding-top:8px;">→</div>',
+            '<div style="text-align:center;font-size:1.5rem;padding-top:8px;">→</div>',
             unsafe_allow_html=True,
         )
     with col3:

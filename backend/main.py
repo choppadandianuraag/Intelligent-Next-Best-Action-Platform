@@ -8,6 +8,7 @@ Endpoints:
 """
 import os
 from contextlib import asynccontextmanager
+from pydantic import BaseModel
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,13 +16,21 @@ from dotenv import load_dotenv
 
 from backend.agents.graph import run
 from backend.memory.episodic import EpisodicMemory
-from backend.models.schemas import (
-    AnalyzeRequest,
-    FeedbackRequest,
-    RecommendationOutput,
-)
+from backend.models.schemas import RecommendationOutput
 
 load_dotenv()
+
+
+class AnalyzeRequest(BaseModel):
+    account_id: str
+    interaction_text: str
+
+
+class FeedbackRequest(BaseModel):
+    request_id: str
+    decision: str
+    modification_notes: str | None = ""
+
 
 # In-memory cache of recent results (request_id → output dict) for feedback linking
 _result_cache: dict = {}
@@ -70,7 +79,6 @@ async def analyze(request: AnalyzeRequest):
 
     # Cache result for feedback linkage
     _result_cache[result.request_id] = result.model_dump(mode="json")
-    # Keep cache bounded
     if len(_result_cache) > 200:
         oldest = next(iter(_result_cache))
         del _result_cache[oldest]

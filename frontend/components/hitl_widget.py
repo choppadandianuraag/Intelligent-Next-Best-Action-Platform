@@ -9,6 +9,31 @@ import os
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
 
+def _submit_feedback(
+    request_id: str,
+    decision: str,
+    notes: str | None,
+    decision_key: str,
+    submitted_key: str,
+) -> None:
+    try:
+        resp = httpx.post(
+            f"{BACKEND_URL}/feedback",
+            json={
+                "request_id": request_id,
+                "decision": decision,
+                "modification_notes": notes,
+            },
+            timeout=10.0,
+        )
+        resp.raise_for_status()
+        st.session_state[decision_key] = decision
+        st.session_state[submitted_key] = True
+        st.rerun()
+    except Exception as e:
+        st.error(f"Failed to log feedback: {e}")
+
+
 def render_hitl(request_id: str) -> None:
     """Render the HITL decision widget for a given request_id."""
     if not request_id:
@@ -24,9 +49,9 @@ def render_hitl(request_id: str) -> None:
 
     if st.session_state.get(submitted_key):
         decision = st.session_state.get(decision_key, "")
-        _icons = {"accepted": "✅", "modified": "✏️", "rejected": "❌"}
+        icons = {"accepted": "✅", "modified": "✏️", "rejected": "❌"}
         st.success(
-            f"{_icons.get(decision, '✅')} Decision logged: **{decision.upper()}**"
+            f"{icons.get(decision, '✅')} Decision logged: **{decision.upper()}**"
         )
         return
 
@@ -53,7 +78,6 @@ def render_hitl(request_id: str) -> None:
         )
 
     # Show notes field for modify
-    modification_notes = None
     show_notes = st.session_state.get(f"show_notes_{request_id}", False)
 
     if modify:
@@ -73,34 +97,11 @@ def render_hitl(request_id: str) -> None:
             type="primary",
         )
         if confirm_modify:
-            _submit_feedback(request_id, "modified", modification_notes, decision_key, submitted_key)
+            _submit_feedback(
+                request_id, "modified", modification_notes, decision_key, submitted_key
+            )
 
     if accept:
         _submit_feedback(request_id, "accepted", None, decision_key, submitted_key)
     elif reject:
         _submit_feedback(request_id, "rejected", None, decision_key, submitted_key)
-
-
-def _submit_feedback(
-    request_id: str,
-    decision: str,
-    notes: str | None,
-    decision_key: str,
-    submitted_key: str,
-) -> None:
-    try:
-        resp = httpx.post(
-            f"{BACKEND_URL}/feedback",
-            json={
-                "request_id": request_id,
-                "decision": decision,
-                "modification_notes": notes,
-            },
-            timeout=10.0,
-        )
-        resp.raise_for_status()
-        st.session_state[decision_key] = decision
-        st.session_state[submitted_key] = True
-        st.rerun()
-    except Exception as e:
-        st.error(f"Failed to log feedback: {e}")

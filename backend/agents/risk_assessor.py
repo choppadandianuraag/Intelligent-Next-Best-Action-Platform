@@ -1,117 +1,203 @@
-"""
-Risk Assessor agent — prompts Groq to score churn risk 0-100% and classify level.
-Returns risk: dict with score (float 0-1), level, signal_count, key_signals.
-"""
 import json
-import os
 import time
-
-from groq import Groq
-from dotenv import load_dotenv
+from typing import Optional
 
 from backend.models.schemas import AgentStep
 
-load_dotenv()
 
-MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
-_client = None
+# ---------------------------------------------------------------------------
+# Model abstraction — swap this out when your open-source model is ready
+# ---------------------------------------------------------------------------
+def _call_model(signals: list, knowledge_chunks: list) -> Optional[str]:
+    """
+    Stub: rule-based risk assessment so the pipeline runs end-to-end
+    without a real model. Replace with your open-source model later.
+    Uses structured signal data directly rather than parsing a prompt string.
+    """
+    # Count signals by type and severity
+    high_risk_count = 0
+    med_risk_count = 0
+    low_risk_count = 0
+    positive_count = 0
+    neutral_count = 0
+
+    for s in signals:
+        signal_type = s.get("type", "")
+        severity = s.get("severity", "")
+
+        if signal_type == "positive":
+            positive_count += 1
+        elif signal_type == "neutral":
+            neutral_count += 1
+        elif signal_type == "risk":
+            if severity == "high":
+                high_risk_count += 1
+            elif severity == "medium":
+                med_risk_count += 1
+            elif severity == "low":
+                low_risk_count += 1
+
+    total_signal_count = high_risk_count + med_risk_count + low_risk_count + positive_count + neutral_count
+
+    # If no signals at all, default to medium (no information = moderate risk)
+    if total_signal_count == 0:
+        result = {
+            "risk_score": 0.5,
+            "risk_level": "medium",
+            "signal_count": 0,
+            "risk_factors": ["No signals available to assess — defaulting to medium risk"],
+        }
+        return json.dumps(result)
+
+    # Weighted risk score calculation
+    base_score = 0.5
+    high_weight = 0.12
+    med_weight = 0.06
+    low_weight = 0.02
+    positive_reduction = 0.15
+
+    raw_score = (
+        base_score
+        + (high_risk_count * high_weight)
+        + (med_risk_count * med_weight)
+        - (positive_count * positive_reduction)
+    )
+    risk_score = max(0.0, min(1.0, raw_score))
+
+    # Risk level classification
+    if risk_score >= 0.75:
+        risk_level = "critical"
+    elif risk_score >= 0.50:
+        risk_level = "high"
+    elif risk_score >= 0.25:
+        risk_level = "medium"
+    else:
+        risk_level = "low"
+
+    # Build risk factors
+    risk_factors = []
+    if high_risk_count > 0:
+        risk_factors.append(f"{high_risk_count} high-severity risk signal(s) detected")
+    if med_risk_count > 0:
+        risk_factors.append(f"{med_risk_count} medium-severity risk signal(s) detected")
+    if low_risk_count > 0:
+        risk_factors.append(f"{low_risk_count} low-severity risk signal(s) detected")
+    if positive_count > 0:
+        risk_factors.append(f"{positive_count} positive signal(s) indicate customer satisfaction")
+
+    if not risk_factors:
+        if risk_score < 0.25:
+            risk_factors.append("No significant risk signals detected — account appears healthy")
+        else:
+            risk_factors.append("General risk factors present")
+
+    result = {
+        "risk_score": round(risk_score, 2),
+        "risk_level": risk_level,
+        "signal_count": max(total_signal_count, 1),
+        "risk_factors": risk_factors,
+    }
+
+    return json.dumps(result)
 
 
-def _get_client() -> Groq:
-    global _client
-    if _client is None:
-        _client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-    return _client
+def _parse_risk_assessment(raw: str) -> dict:
+    """Strip markdown fences and parse JSON risk assessment."""
+    cleaned = raw.strip()
+    if cleaned.startswith("```"):
+        cleaned = cleaned.split("\n", 1)[-1]
+        cleaned = cleaned.rsplit("```", 1)[0]
+        cleaned = cleaned.strip()
+
+    parsed = json.loads(cleaned)
+    required = {"risk_score", "risk_level", "signal_count", "risk_factors"}
+    if not all(k in parsed for k in required):
+        raise ValueError(f"Missing required keys. Got: {list(parsed.keys())}")
+    if parsed["risk_level"] not in ("critical", "high", "medium", "low"):
+        raise ValueError(f"Invalid risk_level: {parsed['risk_level']}")
+    return parsed
 
 
-SYSTEM_PROMPT = """You are a customer success risk analyst. Given extracted signals from a customer interaction and relevant knowledge base context, assess churn risk.
+def _map_risk_factors_to_evidence(
+    risk_factors: list, knowledge_chunks: list
+) -> list:
+    """
+    Map each risk_factor string to the closest Evidence.id by substring
+    matching against evidence excerpts.
+    """
+    if not knowledge_chunks:
+        return ["" for _ in risk_factors]
 
-Return a JSON object with exactly these fields:
-{
-  "score": <float 0.0-1.0, the churn probability>,
-  "level": <"critical" | "high" | "medium" | "low">,
-  "signal_count": <integer count of risk signals>,
-  "key_signals": [<list of up to 4 most important risk signal texts>],
-  "reasoning": <2-3 sentence explanation of the score>
-}
-
-Scoring guide:
-- critical: 0.80-1.0 (explicit churn threat, renewal <30 days, competitor evaluation + multiple signals)
-- high: 0.60-0.79 (1-2 serious risk signals, declining health indicators)
-- medium: 0.35-0.59 (some friction but engaged, onboarding struggles, single risk signal)
-- low: 0.0-0.34 (healthy account, expansion signals, high engagement)
-
-Return ONLY valid JSON. No markdown fences."""
+    mapped = []
+    for factor in risk_factors:
+        factor_lower = factor.lower()
+        matched = False
+        for chunk in knowledge_chunks:
+            excerpt = chunk.get("excerpt", "").lower()
+            if any(word in excerpt for word in factor_lower.split()[:5]):
+                mapped.append(chunk.get("id", knowledge_chunks[0].get("id", "")))
+                matched = True
+                break
+        if not matched:
+            mapped.append(knowledge_chunks[0].get("id", ""))
+    return mapped
 
 
-def risk_assessor_node(state: dict) -> dict:
+def assess(state: dict) -> dict:
+    """
+    Risk Assessor node: evaluates churn risk from signals + knowledge
+    and produces a structured risk assessment with mapped evidence.
+    """
     start = time.time()
+
     signals = state.get("signals", [])
     knowledge_chunks = state.get("knowledge_chunks", [])
-    customer_profile = state.get("customer_profile", {})
 
-    # Build context for Groq
-    risk_signals = [s for s in signals if s.get("type") == "risk"]
-    signals_text = "\n".join(
-        f"- [{s.get('severity', 'medium').upper()}] {s.get('text', '')}" for s in signals
+    prompt = (
+        "You are a customer success risk analyst. Given these signals and "
+        "knowledge articles, assess churn risk.\n"
+        "Return ONLY JSON: {\"risk_score\": float 0.0-1.0, "
+        "\"risk_level\": \"critical|high|medium|low\", "
+        "\"signal_count\": int, \"risk_factors\": [str]}\n\n"
+        f"Signals:\n{json.dumps(signals, indent=2)}\n\n"
+        f"Knowledge:\n{json.dumps(knowledge_chunks, indent=2)}"
     )
-    kb_context = "\n".join(
-        f"- {c.get('excerpt', '')[:200]}" for c in knowledge_chunks[:3]
-    )
-    profile_text = (
-        f"Account: {customer_profile.get('account_name', 'Unknown')}, "
-        f"ARR: ${customer_profile.get('arr', 0):,}, "
-        f"Health score trend: {customer_profile.get('health_score_history', [])}, "
-        f"Open tickets: {customer_profile.get('open_tickets', 0)}, "
-        f"NPS: {customer_profile.get('nps_score', 'N/A')}, "
-        f"Contract end: {customer_profile.get('contract_end', 'N/A')}"
-    ) if customer_profile else "No CRM profile available"
-
-    prompt = f"""Assess churn risk for this customer.
-
-Customer Profile:
-{profile_text}
-
-Signals from interaction:
-{signals_text}
-
-Relevant knowledge context:
-{kb_context}"""
 
     try:
-        response = _get_client().chat.completions.create(
-            model=MODEL,
-            max_tokens=512,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": prompt}
-            ],
+        raw_response = _call_model(signals, knowledge_chunks)
+        parsed = _parse_risk_assessment(raw_response)
+
+        # Override signal_count with actual count if needed
+        parsed["signal_count"] = max(parsed.get("signal_count", 0), len(signals))
+
+        # Map risk factors to evidence IDs
+        parsed["risk_factors"] = _map_risk_factors_to_evidence(
+            parsed["risk_factors"], knowledge_chunks
         )
-        content = response.choices[0].message.content.strip()
-        if content.startswith("```"):
-            content = content.split("```")[1]
-            if content.startswith("json"):
-                content = content[4:]
-        risk = json.loads(content)
+
+        risk_score = parsed["risk_score"]
+        risk_level = parsed["risk_level"]
+        reasoning = f"Risk level: {risk_level}, score: {risk_score:.2f}"
+
     except Exception as e:
-        risk = {
-            "score": 0.5,
-            "level": "medium",
-            "signal_count": len(risk_signals),
-            "key_signals": [s.get("text", "") for s in risk_signals[:4]],
-            "reasoning": f"Risk assessment failed ({e}); defaulting to medium.",
+        risk_score = 0.5
+        risk_level = "medium"
+        parsed = {
+            "risk_score": risk_score,
+            "risk_level": risk_level,
+            "signal_count": len(signals),
+            "risk_factors": [""],
         }
+        reasoning = f"Risk assessment failed: {str(e)}"
 
-    duration_ms = int((time.time() - start) * 1000)
+    duration_ms = max(1, round((time.time() - start) * 1000))
 
-    step = AgentStep(
-        agent_name="Risk Assessor",
-        action=f"Risk assessed: {risk['level'].upper()} ({risk['score']:.0%})",
-        reasoning=risk.get("reasoning", f"Score: {risk['score']:.2f}, Level: {risk['level']}"),
-        duration_ms=duration_ms,
-    )
+    step = {
+        "agent_name": "risk_assessor",
+        "action": "assessed_risk",
+        "reasoning": reasoning,
+        "duration_ms": duration_ms,
+    }
+    state["agent_trace"].append(step)
 
-    agent_trace = state.get("agent_trace", [])
-    agent_trace.append(step.model_dump())
-
-    return {**state, "risk": risk, "agent_trace": agent_trace}
+    return {"risk": parsed, "agent_trace": state["agent_trace"]}

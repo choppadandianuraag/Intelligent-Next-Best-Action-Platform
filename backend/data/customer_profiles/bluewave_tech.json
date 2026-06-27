@@ -3,11 +3,13 @@
   "arr": 62000,
   "industry": "Technology",
   "contract_end": "2026-09-30",
-  "csm": "Marcus Reid",
-  "health_score_history": [65, 60, 58, 52, 49],
-  "daily_active_users": 28,
+  "csm": "James Park",
+  "health_score_history": [78, 71, 65, 58, 51],
+  "daily_active_users": 22,
   "last_login_date": "2026-06-18",
-  "features_adopted": ["dashboard", "alerts", "reporting"],
+  "features_adopted": ["dashboard", "reports"],
   "open_tickets": 5,
-  "nps_score": 31
+  "nps_score": 28,
+  "risk_score": 0.71,
+  "risk_level": "high"
 }
