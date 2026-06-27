@@ -1,0 +1,21 @@
+{
+  "account_name": "Mahindra Tech Services",
+  "arr": 8800000,
+  "arr_inr_display": "₹88,00,000",
+  "industry": "IT Services / Engineering",
+  "region": "Pune, Maharashtra",
+  "contract_end": "2026-11-18",
+  "csm": "Anjali Pillai",
+  "health_score_history": [83, 87, 90, 93, 94],
+  "daily_active_users": 118,
+  "total_licensed_users": 125,
+  "last_login_date": "2026-06-22",
+  "features_adopted": ["dashboard", "alerts", "reports", "automation"],
+  "open_tickets": 1,
+  "nps_score": 67,
+  "risk_score": 0.11,
+  "risk_level": "low",
+  "primary_contact": "Deepak Agarwal",
+  "primary_contact_title": "Senior VP Delivery",
+  "notes": "94% adoption — power user account. Expansion: 120 users in Hyderabad + Chennai, SAP integration, consolidated billing requested."
+}

@@ -1,0 +1,22 @@
+{
+  "case_id": "IN-CASE-001",
+  "account_name": "Reliance Jio Enterprise",
+  "arr": 15000000,
+  "arr_inr_display": "₹1,50,00,000",
+  "region": "Mumbai, Maharashtra",
+  "industry": "Telecom / Enterprise",
+  "situation_summary": "Major data sync failure during client demo caused significant embarrassment. Support response times were critically slow — 14+ day resolution on P1 tickets. Account was actively considering switching to a competitor.",
+  "risk_signals": [
+    "data sync failure during live client demo",
+    "P1 ticket unresolved for 14 days",
+    "CSM not notified of incident proactively",
+    "low login activity for 3 consecutive weeks",
+    "competitor evaluation mentioned by Director"
+  ],
+  "action_taken": "Executive Business Review with dedicated support engineer assigned to account. Real-time data sync health monitoring implemented. Weekly personal account review by CSM established.",
+  "outcome": "Renewed with 20% ARR expansion — Ahmedabad office added. New API integration proposal accepted.",
+  "days_to_resolution": 18,
+  "renewal_achieved": true,
+  "csm": "Arjun Mehta",
+  "csm_notes": "EBR was critical but so was the personal accountability. Harish needed to see genuine ownership from our side. Dedicated support engineer (Ramesh) became the hero of this story. Early proactive monitoring setup was the turning point."
+}

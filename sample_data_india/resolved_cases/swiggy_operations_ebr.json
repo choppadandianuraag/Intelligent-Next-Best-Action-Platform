@@ -1,0 +1,22 @@
+{
+  "case_id": "IN-CASE-004",
+  "account_name": "Swiggy Operations",
+  "arr": 6500000,
+  "arr_inr_display": "₹65,00,000",
+  "region": "Bengaluru, Karnataka",
+  "industry": "Food Delivery / Logistics",
+  "situation_summary": "Rapid company growth (3x headcount in 18 months) caused the platform to feel inadequate. Power users had outgrown the standard tier. Integration with their home-built dispatch system was failing intermittently causing frustration at senior levels.",
+  "risk_signals": [
+    "dispatch system integration failing intermittently",
+    "team outgrew standard tier — requesting enterprise features",
+    "5 escalations in 60 days",
+    "VP Operations mentioned exploring alternatives in a Slack message shared by champion",
+    "NPS dropped from 62 to 28 in one quarter"
+  ],
+  "action_taken": "EBR with VP Operations and CTO. Live demonstration of enterprise tier capabilities including advanced API, custom webhooks for dispatch integration, and dedicated infrastructure. Technical integration fix deployed within 48 hours of EBR.",
+  "outcome": "Upgraded to enterprise tier — ARR increased by 35%. Integration issue permanently resolved. NPS recovered to 61 within 2 months.",
+  "days_to_resolution": 9,
+  "renewal_achieved": true,
+  "csm": "Rahul Desai",
+  "csm_notes": "Fast-growing startups need a partner who can scale with them. Showing them the enterprise roadmap and fixing the technical issue within 48 hours signalled real commitment. The upgrade actually made the renewal stronger — they felt they were finally getting what they needed."
+}

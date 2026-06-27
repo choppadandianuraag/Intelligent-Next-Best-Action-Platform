@@ -1,0 +1,22 @@
+{
+  "case_id": "IN-CASE-005",
+  "account_name": "PharmEasy Supply Analytics",
+  "arr": 3200000,
+  "arr_inr_display": "₹32,00,000",
+  "region": "Mumbai, Maharashtra",
+  "industry": "HealthTech / Pharma",
+  "situation_summary": "Account had been live for 8 months but never properly onboarded — the original champion rushed the setup and skipped training sessions. Only 2 of 7 modules in use. New team members had no training and were creating workarounds. Platform seen as 'too complex'.",
+  "risk_signals": [
+    "only 28% feature adoption after 8 months",
+    "3 team members using personal spreadsheets instead of platform",
+    "original champion Suresh demoted — no longer platform owner",
+    "no training records for 4 of 7 current users",
+    "renewal decision pending review from COO"
+  ],
+  "action_taken": "Complete re-onboarding programme — 4 sessions over 3 weeks. Simplified onboarding path mapped to PharmEasy's specific supply chain workflows. COO briefing with before/after adoption metrics. Dedicated Slack channel for 60-day post-onboarding support.",
+  "outcome": "Renewed. Feature adoption jumped from 28% to 71% within 6 weeks of re-onboarding. COO approved renewal same day as briefing.",
+  "days_to_resolution": 24,
+  "renewal_achieved": true,
+  "csm": "Neha Sharma",
+  "csm_notes": "The problem was never the product — it was the rushed original onboarding. Re-onboarding properly with workflow-specific training changed everything. The COO briefing was key: showing quantified adoption progress before-and-after made the decision easy."
+}
