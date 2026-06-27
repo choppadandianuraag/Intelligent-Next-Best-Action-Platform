@@ -1,0 +1,22 @@
+{
+  "case_id": "IN-CASE-003",
+  "account_name": "HCL Technologies Analytics",
+  "arr": 11000000,
+  "arr_inr_display": "₹1,10,00,000",
+  "region": "Noida, Uttar Pradesh",
+  "industry": "IT Services",
+  "situation_summary": "Mid-year budget review triggered a mandatory 20% SaaS reduction exercise. Platform was on the shortlist for elimination despite reasonable usage. Decision maker had changed — new CFO was not aware of the platform's value.",
+  "risk_signals": [
+    "company-wide SaaS budget cut mandate",
+    "new CFO with no platform relationship",
+    "renewal decision escalated above CSM contact",
+    "no executive sponsor identified",
+    "silence from primary contact for 18 days"
+  ],
+  "action_taken": "Emergency EBR arranged with new CFO. Custom ROI report prepared showing 3,100 hours saved in Q1-Q2. Executive sponsorship from our VP Sales for the call. Multi-year deal with 8% discount proposed to demonstrate partnership.",
+  "outcome": "Renewed on 2-year deal with 8% discount. CFO became a new executive sponsor. Featured in company case study.",
+  "days_to_resolution": 12,
+  "renewal_achieved": true,
+  "csm": "Karan Verma",
+  "csm_notes": "When the CFO is the new decision maker, you need your own executive in the room. The ROI report was essential — always quantify in hours and rupees, not in features. The 2-year deal was the right offer: gave them price certainty and gave us retention."
+}

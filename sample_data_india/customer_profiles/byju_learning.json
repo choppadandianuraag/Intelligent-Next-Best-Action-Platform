@@ -1,0 +1,21 @@
+{
+  "account_name": "BYJU's Learning Operations",
+  "arr": 3800000,
+  "arr_inr_display": "₹38,00,000",
+  "industry": "EdTech",
+  "region": "Bengaluru, Karnataka",
+  "contract_end": "2026-07-15",
+  "csm": "Neha Sharma",
+  "health_score_history": [71, 65, 58, 51, 44],
+  "daily_active_users": 38,
+  "total_licensed_users": 95,
+  "last_login_date": "2026-06-22",
+  "features_adopted": ["dashboard", "reports"],
+  "open_tickets": 4,
+  "nps_score": 33,
+  "risk_score": 0.78,
+  "risk_level": "high",
+  "primary_contact": "Sanjay Patel",
+  "primary_contact_title": "VP Operations",
+  "notes": "Company-wide budget cuts. 30% SaaS reduction mandate. 22 days to renewal. ROI quantification and pricing flexibility needed."
+}

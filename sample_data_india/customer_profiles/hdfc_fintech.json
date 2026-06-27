@@ -1,0 +1,21 @@
+{
+  "account_name": "HDFC FinTech Solutions",
+  "arr": 18000000,
+  "arr_inr_display": "₹1,80,00,000",
+  "industry": "Banking / FinTech",
+  "region": "Mumbai, Maharashtra",
+  "contract_end": "2026-10-24",
+  "csm": "Karan Verma",
+  "health_score_history": [85, 88, 91, 93, 96],
+  "daily_active_users": 142,
+  "total_licensed_users": 175,
+  "last_login_date": "2026-06-16",
+  "features_adopted": ["dashboard", "alerts", "automation", "reports", "integrations"],
+  "open_tickets": 1,
+  "nps_score": 72,
+  "risk_score": 0.08,
+  "risk_level": "low",
+  "primary_contact": "Meera Krishnamurthy",
+  "primary_contact_title": "VP Technology",
+  "notes": "Expansion opportunity: 65 additional users (Pune), API tier for core banking integration. Board-level ROI recognition."
+}
