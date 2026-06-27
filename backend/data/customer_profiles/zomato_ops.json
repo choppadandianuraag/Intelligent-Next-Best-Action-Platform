@@ -1,0 +1,21 @@
+{
+  "account_name": "Zomato Operations Intelligence",
+  "arr": 5500000,
+  "arr_inr_display": "₹55,00,000",
+  "industry": "Food Tech / Logistics",
+  "region": "Gurugram, Haryana",
+  "contract_end": "2026-09-01",
+  "csm": "Divya Reddy",
+  "health_score_history": [76, 79, 81, 83, 85],
+  "daily_active_users": 67,
+  "total_licensed_users": 90,
+  "last_login_date": "2026-06-18",
+  "features_adopted": ["dashboard", "alerts", "reports"],
+  "open_tickets": 2,
+  "nps_score": 58,
+  "risk_score": 0.18,
+  "risk_level": "low",
+  "primary_contact": "Abhinav Joshi",
+  "primary_contact_title": "Head of Ops Intelligence",
+  "notes": "Healthy account. Scaling to 80+ cities — capacity assessment requested. Mobile UX improvement needed. Multi-year renewal possible."
+}

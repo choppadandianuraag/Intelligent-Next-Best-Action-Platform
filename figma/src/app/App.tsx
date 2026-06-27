@@ -16,14 +16,6 @@ import {
 // ─── API ──────────────────────────────────────────────────────────────────
 const API = "http://localhost:8000";
 
-const ACCOUNTS: Record<string, { name: string; label: string }> = {
-  acme_corp: { name: "Acme Corp", label: "Acme Corp — At Risk" },
-  techcorp: { name: "TechCorp", label: "TechCorp — Onboarding" },
-  globex_corp: { name: "Globex Corp", label: "Globex Corp — Healthy" },
-  nexus_systems: { name: "Nexus Systems", label: "Nexus Systems — At Risk" },
-  bluewave_tech: { name: "BlueWave Tech", label: "BlueWave Tech — At Risk" },
-};
-
 // ─── Types ─────────────────────────────────────────────────────────────────
 interface AgentStep {
   agent_name: string;
@@ -96,6 +88,12 @@ const RISK_COLORS: Record<string, string> = {
   high: C.warning,
   medium: C.amber,
   low: C.success,
+};
+
+const inputStyle: React.CSSProperties = {
+  width: "100%", height: 28, background: "#0C0E14", border: "1px solid rgba(255,255,255,0.1)",
+  borderRadius: 5, padding: "0 8px", fontSize: 11, color: C.textPrimary,
+  outline: "none", boxSizing: "border-box", fontFamily: "Inter, sans-serif",
 };
 
 // ─── Donut gauge ────────────────────────────────────────���───────────────────
@@ -235,7 +233,7 @@ const SOURCE_LABELS: Record<string, string> = {
 
 // ─── Main app ─────────────────────────────────────────────────────────────────
 export default function App() {
-  const [accountId, setAccountId] = useState("acme_corp");
+  const [accountId, setAccountId] = useState("");
   const [transcript, setTranscript] = useState("");
   const [analysing, setAnalysing] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -245,15 +243,58 @@ export default function App() {
   const [modifySubmitted, setModifySubmitted] = useState(false);
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const [backendOk, setBackendOk] = useState<boolean | null>(null);
+  const [accounts, setAccounts] = useState<AccountSummary[]>([]);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [addForm, setAddForm] = useState({ account_name: "", industry: "", region: "", contract_end: "", csm: "", arr: "" });
+  const [adding, setAdding] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Check backend health on mount
+  interface AccountSummary {
+    id: string; name: string; arr_inr: string; industry: string;
+    region: string; csm: string; contract_end: string; risk_level: string; risk_score: number;
+  }
+
+  const fetchAccounts = useCallback(async () => {
+    try {
+      const resp = await fetch(`${API}/accounts`);
+      const data = await resp.json();
+      setAccounts(data.accounts || []);
+      // Auto-select first account if none selected
+      setAccountId(prev => prev || (data.accounts?.[0]?.id) || "");
+    } catch (_) {}
+  }, []);
+
+  // Check backend health and fetch accounts on mount
   useEffect(() => {
     fetch(`${API}/health`)
       .then(r => r.json())
       .then(d => setBackendOk(d.status === "ok"))
       .catch(() => setBackendOk(false));
-  }, []);
+    fetchAccounts();
+  }, [fetchAccounts]);
+
+  const handleAddCompany = useCallback(async () => {
+    if (!addForm.account_name.trim() || !addForm.industry.trim() || !addForm.csm.trim()) return;
+    setAdding(true);
+    try {
+      const resp = await fetch(`${API}/accounts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...addForm,
+          arr: parseInt(addForm.arr) || 0,
+        }),
+      });
+      const data = await resp.json();
+      if (data.status === "created") {
+        setShowAddForm(false);
+        setAddForm({ account_name: "", industry: "", region: "", contract_end: "", csm: "", arr: "" });
+        await fetchAccounts();
+        setAccountId(data.account_id);
+      }
+    } catch (_) {}
+    setAdding(false);
+  }, [addForm, fetchAccounts]);
 
   const handleAnalyse = useCallback(async () => {
     if (!transcript.trim()) return;
@@ -380,12 +421,42 @@ export default function App() {
                   color: C.textPrimary, appearance: "none", cursor: "pointer", outline: "none",
                 }}
               >
-                {Object.entries(ACCOUNTS).map(([id, acct]) => (
-                  <option key={id} value={id}>{acct.label}</option>
+                {accounts.map(acct => (
+                  <option key={acct.id} value={acct.id}>
+                    {acct.name} — {acct.arr_inr} · {acct.industry}
+                  </option>
                 ))}
               </select>
               <ChevronDown size={12} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", color: C.textMuted, pointerEvents: "none" }} />
             </div>
+            {/* Add Company button */}
+            <button onClick={() => setShowAddForm(s => !s)} style={{
+              width: "100%", marginTop: 6, height: 28, background: "transparent",
+              color: C.indigoLight, border: `1px dashed ${C.indigo}44`,
+              borderRadius: 6, fontSize: 11, fontWeight: 500, cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
+            }}>
+              <Minus size={12} /> Add new company
+            </button>
+            {/* Add Company form */}
+            {showAddForm && (
+              <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 6, padding: 10, background: C.bg, borderRadius: 8, border: `1px solid ${C.border}` }}>
+                <input value={addForm.account_name} onChange={e => setAddForm(f => ({...f, account_name: e.target.value}))} placeholder="Company name *" style={inputStyle} />
+                <input value={addForm.industry} onChange={e => setAddForm(f => ({...f, industry: e.target.value}))} placeholder="Industry *" style={inputStyle} />
+                <input value={addForm.region} onChange={e => setAddForm(f => ({...f, region: e.target.value}))} placeholder="City, State" style={inputStyle} />
+                <input value={addForm.csm} onChange={e => setAddForm(f => ({...f, csm: e.target.value}))} placeholder="CSM name *" style={inputStyle} />
+                <input value={addForm.contract_end} onChange={e => setAddForm(f => ({...f, contract_end: e.target.value}))} placeholder="Contract end (YYYY-MM-DD)" style={inputStyle} />
+                <input value={addForm.arr} onChange={e => setAddForm(f => ({...f, arr: e.target.value}))} placeholder="ARR in INR" type="number" style={inputStyle} />
+                <button onClick={handleAddCompany} disabled={adding} style={{
+                  height: 30, background: C.indigo, color: "#fff", border: "none",
+                  borderRadius: 6, fontSize: 11, fontWeight: 500, cursor: adding ? "default" : "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
+                  marginTop: 2,
+                }}>
+                  {adding ? <><Loader2 size={12} style={{animation: "spin 1s linear infinite"}} /> Adding…</> : <><Sparkles size={12} /> Add company</>}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Transcript */}

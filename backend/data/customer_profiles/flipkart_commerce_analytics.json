@@ -1,0 +1,23 @@
+{
+  "account_name": "Flipkart Commerce Analytics",
+  "arr": 65000000,
+  "arr_inr_display": "₹65,000,000",
+  "industry": "E-Commerce",
+  "region": "Bengaluru, Karnataka",
+  "contract_end": "2027-06-30",
+  "csm": "Priya Sharma",
+  "health_score_history": [
+    50
+  ],
+  "daily_active_users": 0,
+  "total_licensed_users": 0,
+  "last_login_date": "2026-06-27",
+  "features_adopted": [],
+  "open_tickets": 0,
+  "nps_score": 50,
+  "risk_score": 0.5,
+  "risk_level": "medium",
+  "primary_contact": "Rahul Mehta",
+  "primary_contact_title": "VP Analytics",
+  "notes": "New account added during jury demo"
+}

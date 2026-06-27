@@ -1,0 +1,22 @@
+{
+  "case_id": "IN-CASE-002",
+  "account_name": "Nykaa E-Commerce Analytics",
+  "arr": 4800000,
+  "arr_inr_display": "₹48,00,000",
+  "region": "Mumbai, Maharashtra",
+  "industry": "E-Commerce / Beauty",
+  "situation_summary": "Platform champion Kavitha left the company unexpectedly. New owner Pooja had no platform knowledge, only 40% of features being used, all seasonal planning still done in spreadsheets. Renewal at risk due to low perceived value.",
+  "risk_signals": [
+    "champion departure — Kavitha left the company",
+    "new owner with zero platform training",
+    "feature adoption at only 40%",
+    "seasonal forecasting module completely unused",
+    "no ROI documentation available"
+  ],
+  "action_taken": "Full re-onboarding session with new champion. In-person visit to Mumbai office. Seasonal forecasting module demo with Diwali sale use case. Value realisation report prepared for leadership presentation.",
+  "outcome": "Renewed. Seasonal forecasting module adopted before next quarter sale. NPS improved from 31 to 58.",
+  "days_to_resolution": 21,
+  "renewal_achieved": true,
+  "csm": "Divya Reddy",
+  "csm_notes": "The seasonal forecasting module was the unlock. Showing Pooja a concrete use case relevant to their biggest business event (Diwali sale) made the ROI immediately obvious. Always bring industry-specific use cases to champion transition calls."
+}

@@ -6,8 +6,11 @@ Endpoints:
   POST /feedback  — accepts FeedbackRequest, logs to episodic memory
   GET  /health    — returns {"status": "ok"}
 """
+import json
 import os
+import uuid
 from contextlib import asynccontextmanager
+from datetime import datetime
 from pydantic import BaseModel
 
 from fastapi import FastAPI, HTTPException
@@ -30,6 +33,24 @@ class FeedbackRequest(BaseModel):
     request_id: str
     decision: str
     modification_notes: str | None = None
+
+
+PROFILES_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "backend", "data", "customer_profiles",
+)
+
+
+class CreateAccountRequest(BaseModel):
+    account_name: str
+    industry: str
+    region: str = ""
+    contract_end: str = ""
+    csm: str = ""
+    arr: int = 0
+    primary_contact: str = ""
+    primary_contact_title: str = ""
+    notes: str = ""
 
 
 # In-memory cache of recent results (request_id → output dict) for feedback linking
@@ -62,6 +83,84 @@ app.add_middleware(
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+
+@app.get("/accounts")
+async def list_accounts():
+    """Return all customer profiles (summary info for the dropdown)."""
+    accounts = []
+    if not os.path.isdir(PROFILES_DIR):
+        return {"accounts": []}
+    for fname in sorted(os.listdir(PROFILES_DIR)):
+        if not fname.endswith(".json"):
+            continue
+        path = os.path.join(PROFILES_DIR, fname)
+        try:
+            with open(path, encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception:
+            continue
+        account_id = fname.replace(".json", "")
+        accounts.append({
+            "id": account_id,
+            "name": data.get("account_name", account_id),
+            "arr_inr": data.get("arr_inr_display", ""),
+            "industry": data.get("industry", ""),
+            "region": data.get("region", ""),
+            "csm": data.get("csm", ""),
+            "contract_end": data.get("contract_end", ""),
+            "risk_level": data.get("risk_level", ""),
+            "risk_score": data.get("risk_score", 0),
+        })
+    return {"accounts": accounts}
+
+
+@app.post("/accounts")
+async def create_account(request: CreateAccountRequest):
+    """Create a new customer profile and return its account_id."""
+    if not request.account_name.strip():
+        raise HTTPException(status_code=400, detail="account_name is required")
+
+    account_id = request.account_name.lower().replace(" ", "_").replace("-", "_")
+    # Ensure uniqueness
+    fpath = os.path.join(PROFILES_DIR, f"{account_id}.json")
+    if os.path.exists(fpath):
+        # Append a suffix
+        suffix = 1
+        while os.path.exists(os.path.join(PROFILES_DIR, f"{account_id}_{suffix}.json")):
+            suffix += 1
+        account_id = f"{account_id}_{suffix}"
+        fpath = os.path.join(PROFILES_DIR, f"{account_id}.json")
+
+    profile = {
+        "account_name": request.account_name,
+        "arr": request.arr,
+        "arr_inr_display": f"₹{request.arr:,}" if request.arr else "",
+        "industry": request.industry,
+        "region": request.region,
+        "contract_end": request.contract_end,
+        "csm": request.csm,
+        "health_score_history": [50],
+        "daily_active_users": 0,
+        "total_licensed_users": 0,
+        "last_login_date": datetime.utcnow().strftime("%Y-%m-%d"),
+        "features_adopted": [],
+        "open_tickets": 0,
+        "nps_score": 50,
+        "risk_score": 0.5,
+        "risk_level": "medium",
+        "primary_contact": request.primary_contact,
+        "primary_contact_title": request.primary_contact_title,
+        "notes": request.notes,
+    }
+    with open(fpath, "w", encoding="utf-8") as f:
+        json.dump(profile, f, indent=2, ensure_ascii=False)
+
+    return {
+        "status": "created",
+        "account_id": account_id,
+        "account": profile,
+    }
 
 
 @app.post("/analyze", response_model=RecommendationOutput)
