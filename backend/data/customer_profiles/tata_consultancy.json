@@ -1,0 +1,21 @@
+{
+  "account_name": "TCS Digital Workspace",
+  "arr": 12000000,
+  "arr_inr_display": "₹1,20,00,000",
+  "industry": "IT Services",
+  "region": "Chennai, Tamil Nadu",
+  "contract_end": "2026-07-20",
+  "csm": "Arjun Mehta",
+  "health_score_history": [80, 73, 65, 55, 46],
+  "daily_active_users": 88,
+  "total_licensed_users": 210,
+  "last_login_date": "2026-06-11",
+  "features_adopted": ["dashboard", "automation", "alerts"],
+  "open_tickets": 11,
+  "nps_score": 19,
+  "risk_score": 0.88,
+  "risk_level": "critical",
+  "primary_contact": "Sundar Rajan",
+  "primary_contact_title": "Head of Digital Operations",
+  "notes": "Data export to BI tool failing silently for 12 days. Ticket TCS-4421 unresolved. CTO review scheduled Thursday."
+}

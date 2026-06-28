@@ -1,0 +1,21 @@
+{
+  "account_name": "Ola Electric Supply Chain",
+  "arr": 4200000,
+  "arr_inr_display": "₹42,00,000",
+  "industry": "EV / Manufacturing",
+  "region": "Bengaluru, Karnataka",
+  "contract_end": "2026-12-15",
+  "csm": "Rahul Desai",
+  "health_score_history": [48, 44, 41, 39, 42],
+  "daily_active_users": 14,
+  "total_licensed_users": 55,
+  "last_login_date": "2026-06-19",
+  "features_adopted": ["dashboard"],
+  "open_tickets": 5,
+  "nps_score": 41,
+  "risk_score": 0.55,
+  "risk_level": "medium",
+  "primary_contact": "Preethi Subramaniam",
+  "primary_contact_title": "Supply Chain Analytics Lead",
+  "notes": "Onboarding phase — 3 months in. SSO integration pending (blocking 50% of users). In-person workshops requested for young team."
+}

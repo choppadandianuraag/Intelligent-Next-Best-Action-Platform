@@ -1,7 +1,7 @@
 # P3 — Frontend / Demo Lead
 
-**Role:** Build the FastAPI backend server, Streamlit frontend, UI components, documentation, and record the demo.
-**Timeline:** 3 days. Work in `backend/main.py`, `frontend/`, and `docs/`.
+**Role:** Build the FastAPI backend server, React/Vite frontend, documentation, and record the demo.
+**Timeline:** 3 days. Work in `backend/main.py`, `figma/`, and `docs/`.
 
 ---
 
@@ -10,20 +10,19 @@
 ```
 backend/
 └── main.py
-frontend/
-├── app.py
-└── components/
-    ├── agent_trace.py
-    ├── recommendation_panel.py
-    ├── memory_panel.py
-    └── hitl_widget.py
+figma/
+├── package.json                  # Frontend deps (pnpm)
+├── vite.config.ts                # Build config
+├── src/
+│   └── app/App.tsx               # React SPA — single-page app
+└── dist/                         # Pre-built static bundle
 docs/
 ├── ARCHITECTURE.md
 └── demo_script.md
 README.md
 ```
 
-**Dependencies:** `fastapi`, `uvicorn`, `streamlit`, `httpx`, `pydantic`, `python-dotenv`
+**Dependencies:** `fastapi`, `uvicorn`, `httpx`, `pydantic`, `python-dotenv`; frontend uses React 18 + Vite + Tailwind + shadcn/ui
 
 ---
 
@@ -278,7 +277,7 @@ Include:
   python scripts/seed_memory.py
   uvicorn backend.main:app --port 8000
   # new terminal
-  streamlit run frontend/app.py
+  cd figma/dist && python3 -m http.server 5173
   ```
 - Screenshot placeholder: `![Recommendation Panel](docs/screenshot.png)`
 - Team members and roles
@@ -316,7 +315,7 @@ Script for the 5-minute video:
 ## Checklist Before Handoff
 
 - [ ] `uvicorn backend.main:app` starts without errors
-- [ ] `streamlit run frontend/app.py` opens in browser
+- [ ] `cd figma/dist && python3 -m http.server 5173` opens in browser at localhost:5173
 - [ ] Full flow works: select account -> analyse -> see all components -> accept/reject/modify
 - [ ] `/health` returns `{"status": "ok"}`
 - [ ] `/feedback` logs entries to SQLite (verify with `sqlite3 episodic_memory.db "SELECT * FROM memory_log;"`)

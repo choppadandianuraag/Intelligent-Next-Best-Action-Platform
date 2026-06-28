@@ -1,0 +1,21 @@
+{
+  "account_name": "Wipro CloudOps",
+  "arr": 9500000,
+  "arr_inr_display": "₹95,00,000",
+  "industry": "IT Services / Cloud",
+  "region": "Bengaluru, Karnataka",
+  "contract_end": "2026-09-13",
+  "csm": "Sneha Iyer",
+  "health_score_history": [82, 78, 70, 63, 57],
+  "daily_active_users": 54,
+  "total_licensed_users": 145,
+  "last_login_date": "2026-06-13",
+  "features_adopted": ["dashboard", "alerts", "reports"],
+  "open_tickets": 3,
+  "nps_score": 38,
+  "risk_score": 0.62,
+  "risk_level": "high",
+  "primary_contact": "Vikram Sharma",
+  "primary_contact_title": "Director of Cloud Operations",
+  "notes": "Champion (Ananya) left company. New champion Rohan Bapat identified but untrained. Re-onboarding program proposed."
+}

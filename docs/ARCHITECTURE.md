@@ -6,7 +6,7 @@ Meridian is a decision intelligence platform for customer success teams. It uses
 
 ```mermaid
 graph TD
-    A[Streamlit Frontend<br/>frontend/app.py] -->|POST /analyze<br/>account_id + transcript| B[FastAPI Server<br/>backend/main.py :8000]
+    A[React Frontend<br/>figma/src/app/App.tsx] -->|POST /analyze<br/>account_id + transcript| B[FastAPI Server<br/>backend/main.py :8000]
     A -->|POST /feedback<br/>decision + notes| B
     B --> C[LangGraph StateGraph<br/>backend/agents/graph.py]
     C --> D[planner<br/>creates execution plan]
@@ -143,7 +143,7 @@ Transcript + Account ID
     NBA Generator: rule-based Action + 2 alternatives, apply memory boost
         │
         ▼
-    RecommendationOutput (Pydantic) → FastAPI → Streamlit
+    RecommendationOutput (Pydantic) → FastAPI → React SPA
 ```
 
 ## Technology Choices
@@ -156,7 +156,7 @@ Transcript + Account ID
 | Vector DB | ChromaDB (persistent) | Simple, embeds locally, cosine similarity |
 | Episodic memory | SQLite | Zero config, sufficient for demo scale |
 | API | FastAPI | Async, auto-docs, Pydantic integration |
-| Frontend | Streamlit | Rapid demo UI, minimal setup |
+| Frontend | React + Vite | Figma-designed dark-theme SPA |
 
 ## Running the System
 
@@ -177,6 +177,7 @@ python scripts/seed_memory.py
 # 5. Start the FastAPI backend
 uvicorn backend.main:app --reload --port 8000
 
-# 6. In a new terminal, start the Streamlit frontend
-streamlit run frontend/app.py
+# 6. In a new terminal, start the React frontend
+cd figma/dist && python3 -m http.server 5173
+# Or for development: cd figma && pnpm dev
 ```

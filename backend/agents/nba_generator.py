@@ -2,162 +2,204 @@ import json
 import time
 from typing import Optional
 
+from backend.agents.llm_client import call_llm
 from backend.memory.episodic import EpisodicMemory
 from backend.models.schemas import AgentStep
 
 
 # ---------------------------------------------------------------------------
-# Model abstraction — swap this out when your open-source model is ready
+# LLM-powered NBA generation
 # ---------------------------------------------------------------------------
-def _call_model(risk: dict, knowledge: list, memory_context: dict) -> Optional[str]:
-    """
-    Stub: rule-based NBA generation so the pipeline runs end-to-end
-    without a real model. Replace with your open-source model later.
-    """
-    risk_level = risk.get("risk_level", "medium")
-    risk_score = risk.get("risk_score", 0.5)
-    signal_count = risk.get("signal_count", 0)
-    risk_factors = risk.get("risk_factors", [])
+def _build_prompt(risk: dict, knowledge: list, memory_context: dict, account_data: dict | None = None) -> str:
+    """Build the LLM prompt for recommendation generation."""
+    # Format knowledge chunks (limit to keep prompt manageable)
+    knowledge_lines = []
+    for i, k in enumerate(knowledge, 1):
+        excerpt = k.get("excerpt", "")
+        source = k.get("source_name", "unknown")
+        stype = k.get("source_type", "")
+        if len(excerpt) > 200:
+            excerpt = excerpt[:200] + "..."
+        knowledge_lines.append(f"  {i}. [{stype}] {source}: {excerpt}")
+    knowledge_str = "\n".join(knowledge_lines) if knowledge_lines else "  (no relevant knowledge found)"
 
-    has_memory = memory_context.get("similar_cases_found", 0) > 0
-    precedent_accounts = memory_context.get("precedent_accounts", [])
+    # Account context
+    account_context = ""
+    if account_data:
+        account_context = (
+            f"\n## Account Context\n"
+            f"  Name: {account_data.get('account_name', 'N/A')}\n"
+            f"  Industry: {account_data.get('industry', 'N/A')}\n"
+            f"  Region: {account_data.get('region', 'N/A')}\n"
+            f"  ARR: {account_data.get('arr_inr_display', 'N/A')}\n"
+            f"  Contract End: {account_data.get('contract_end', 'N/A')}\n"
+            f"  CSM: {account_data.get('csm', 'N/A')}\n"
+            f"  Current NPS: {account_data.get('nps_score', 'N/A')}\n"
+        )
 
-    # Determine primary recommendation based on risk level
-    if risk_level == "critical":
-        primary = {
-            "title": "Schedule Executive Business Review (EBR)",
-            "description": (
+    precedent_str = ""
+    if memory_context.get("precedent_accounts"):
+        precedent_str = (
+            "\nPrecedent accounts with similar resolved situations:\n"
+            + "\n".join(f"  - {a}" for a in memory_context["precedent_accounts"])
+            + "\n"
+        )
+
+    return (
+        "You are a senior customer success strategist. Based on the risk assessment, "
+        "supporting knowledge, and past resolved cases below, generate 3 concrete "
+        "next-best actions for the CSM.\n\n"
+        f"## Risk Assessment\n"
+        f"  Score: {risk.get('risk_score', 'N/A')} ({risk.get('risk_level', 'N/A')})\n"
+        f"  Signals detected: {risk.get('signal_count', 0)}\n"
+        f"  Risk factors: {json.dumps(risk.get('risk_factors', []))}\n"
+        f"{account_context}"
+        f"\n## Supporting Knowledge Evidence\n{knowledge_str}\n"
+        f"\n## Memory Context\n"
+        f"  Similar resolved cases found: {memory_context.get('similar_cases_found', 0)}\n"
+        f"  Memory confidence boost: +{memory_context.get('confidence_boost', 0)}\n"
+        f"{precedent_str}"
+        "\n## Instructions\n"
+        "Return ONLY a JSON object with these exact keys:\n"
+        '{\n'
+        '  "primary": {\n'
+        '    "title": <string, concise actionable title>,\n'
+        '    "description": <string, 2-3 sentences explaining the action and why>,\n'
+        '    "confidence": <float 0.0-1.0, your confidence this is the right action>,\n'
+        '    "estimated_impact": <string, e.g. "High — prevents churn">,\n'
+        '    "evidence_ids": <list of strings, reference evidence IDs>,\n'
+        '    "precedent_accounts": <list of strings>\n'
+        "  },\n"
+        '  "alternatives": [\n'
+        '    {same schema as primary},\n'
+        '    {same schema as primary}\n'
+        "  ]\n"
+        "}\n\n"
+        "Guidelines:\n"
+        "- Make recommendations SPECIFIC to the account context, not generic templates\n"
+        '- "confidence" should reflect how certain you are: 0.7-0.9 for clear patterns, '
+        "0.4-0.6 for ambiguous situations\n"
+        "- For critical/high risk: recommend immediate, concrete intervention steps\n"
+        "- For low risk: recommend expansion, upsell, or relationship-deepening actions\n"
+        "- Reference specific evidence (playbooks, meeting notes, or resolved cases) "
+        "in evidence_ids\n"
+        "- If precedent accounts exist, reference what worked for them in the descriptions\n"
+        "- The description should be useful enough that a CSM could act on it immediately\n"
+    )
+
+
+def _call_model(risk: dict, knowledge: list, memory_context: dict, account_data: dict | None = None) -> Optional[str]:
+    """
+    Call the LLM to generate context-specific next-best-action recommendations.
+    Returns a JSON string with 'primary' and 'alternatives' keys.
+    Falls back to rule-based templates if the LLM call fails.
+    """
+    prompt = _build_prompt(risk, knowledge, memory_context, account_data)
+
+    try:
+        raw_response = call_llm(
+            prompt,
+            max_tokens=2048,
+            temperature=0.2,  # slight creativity for diverse alternatives
+            json_mode=True,
+        )
+        return raw_response
+    except Exception:
+        # Fallback: rule-based templates so the pipeline never breaks
+        risk_level = risk.get("risk_level", "medium")
+        risk_score = risk.get("risk_score", 0.5)
+        signal_count = risk.get("signal_count", 0)
+        risk_factors = risk.get("risk_factors", [])
+        precedent_accounts = memory_context.get("precedent_accounts", [])
+
+        def _fallback_action(title, desc, conf, impact):
+            return {
+                "title": title,
+                "description": desc,
+                "confidence": conf,
+                "estimated_impact": impact,
+                "evidence_ids": ["ev_0"],
+                "precedent_accounts": precedent_accounts,
+            }
+
+        if risk_level == "critical":
+            primary = _fallback_action(
+                "Schedule Executive Business Review (EBR)",
                 f"Account is at critical risk (score: {risk_score}). "
-                "Schedule an Executive Business Review within 48 hours to address "
-                "the identified risk factors and prevent churn."
-            ),
-            "confidence": 0.73,
-            "estimated_impact": "High — addresses critical churn risk head-on",
-            "evidence_ids": list(dict.fromkeys(rf for rf in risk_factors[:3] if rf)) or ["ev_0"],
-            "precedent_accounts": precedent_accounts,
-        }
-        alternatives = [
-            {
-                "title": "Send executive escalation to VP of Customer Success",
-                "description": (
-                    "Escalate the situation to leadership with a full risk report "
-                    "and proposed intervention plan."
+                "Schedule an Executive Business Review within 48 hours.",
+                0.73, "High — addresses critical churn risk head-on"
+            )
+            alternatives = [
+                _fallback_action(
+                    "Send executive escalation to VP of Customer Success",
+                    "Escalate to leadership with a full risk report.", 0.60,
+                    "Medium — ensures leadership visibility"
                 ),
-                "confidence": 0.60,
-                "estimated_impact": "Medium — ensures leadership visibility",
-                "evidence_ids": list(dict.fromkeys(rf for rf in risk_factors[:2] if rf)) or ["ev_0"],
-                "precedent_accounts": precedent_accounts,
-            },
-            {
-                "title": "Conduct technical deep-dive session",
-                "description": (
-                    "Schedule a technical session to address product adoption gaps "
-                    "and demonstrate value of unused features."
+                _fallback_action(
+                    "Conduct technical deep-dive session",
+                    "Address product adoption gaps and demonstrate value.", 0.55,
+                    "Medium — may improve product adoption"
                 ),
-                "confidence": 0.55,
-                "estimated_impact": "Medium — may improve product adoption",
-                "evidence_ids": list(dict.fromkeys(rf for rf in risk_factors[:1] if rf)) or ["ev_0"],
-                "precedent_accounts": precedent_accounts,
-            },
-        ]
-    elif risk_level == "high":
-        primary = {
-            "title": "Schedule targeted intervention call",
-            "description": (
-                f"Account shows high risk (score: {risk_score}). Schedule a focused "
-                "intervention call with the CSM to address specific concerns and "
-                "present a remediation plan."
-            ),
-            "confidence": 0.73,
-            "estimated_impact": "High — addresses risk before it escalates",
-            "evidence_ids": list(dict.fromkeys(rf for rf in risk_factors[:3] if rf)) or ["ev_0"],
-            "precedent_accounts": precedent_accounts,
-        }
-        alternatives = [
-            {
-                "title": "Prepare custom success plan with milestones",
-                "description": "Create a tailored success plan with measurable milestones to rebuild confidence.",
-                "confidence": 0.62,
-                "estimated_impact": "Medium — provides structured path forward",
-                "evidence_ids": list(dict.fromkeys(rf for rf in risk_factors[:2] if rf)) or ["ev_0"],
-                "precedent_accounts": precedent_accounts,
-            },
-            {
-                "title": "Offer discounted renewal with value-add services",
-                "description": "Propose a renewal package with additional services at a discount to retain the account.",
-                "confidence": 0.50,
-                "estimated_impact": "Medium — financial incentive to stay",
-                "evidence_ids": list(dict.fromkeys(rf for rf in risk_factors[:1] if rf)) or ["ev_0"],
-                "precedent_accounts": precedent_accounts,
-            },
-        ]
-    elif risk_level == "medium":
-        primary = {
-            "title": "Schedule Quarterly Business Review (QBR)",
-            "description": (
-                f"Account shows moderate risk (score: {risk_score}). Schedule a QBR "
-                "to review performance, address concerns, and identify expansion opportunities."
-            ),
-            "confidence": 0.73,
-            "estimated_impact": "Medium — maintains relationship and identifies opportunities",
-            "evidence_ids": list(dict.fromkeys(rf for rf in risk_factors[:2] if rf)) or ["ev_0"],
-            "precedent_accounts": precedent_accounts,
-        }
-        alternatives = [
-            {
-                "title": "Conduct health check survey",
-                "description": "Send a customer health check survey to gather more data on satisfaction levels.",
-                "confidence": 0.55,
-                "estimated_impact": "Low — provides additional signal data",
-                "evidence_ids": list(dict.fromkeys(rf for rf in risk_factors[:1] if rf)) or ["ev_0"],
-                "precedent_accounts": precedent_accounts,
-            },
-            {
-                "title": "Share relevant playbook articles",
-                "description": "Share playbook articles addressing the identified risk factors with the customer.",
-                "confidence": 0.45,
-                "estimated_impact": "Low — educational value, limited direct impact",
-                "evidence_ids": list(dict.fromkeys(rf for rf in risk_factors[:1] if rf)) or ["ev_0"],
-                "precedent_accounts": precedent_accounts,
-            },
-        ]
-    else:  # low risk
-        primary = {
-            "title": "Propose enterprise upgrade or expansion",
-            "description": (
-                f"Account is healthy (score: {risk_score}, {signal_count} positive signals). "
-                "Propose an enterprise upgrade, expansion to new teams, or API access "
-                "to capitalize on engagement."
-            ),
-            "confidence": 0.73,
-            "estimated_impact": "High — captures expansion opportunity",
-            "evidence_ids": list(dict.fromkeys(rf for rf in risk_factors[:2] if rf)) or ["ev_0"],
-            "precedent_accounts": precedent_accounts,
-        }
-        alternatives = [
-            {
-                "title": "Request customer referral or case study",
-                "description": "Ask the satisfied customer for a referral or case study to drive new business.",
-                "confidence": 0.60,
-                "estimated_impact": "Medium — generates pipeline and social proof",
-                "evidence_ids": list(dict.fromkeys(rf for rf in risk_factors[:1] if rf)) or ["ev_0"],
-                "precedent_accounts": precedent_accounts,
-            },
-            {
-                "title": "Schedule product roadmap review",
-                "description": "Share upcoming product roadmap and gather feedback on future priorities.",
-                "confidence": 0.55,
-                "estimated_impact": "Medium — strengthens partnership and alignment",
-                "evidence_ids": list(dict.fromkeys(rf for rf in risk_factors[:1] if rf)) or ["ev_0"],
-                "precedent_accounts": precedent_accounts,
-            },
-        ]
+            ]
+        elif risk_level == "high":
+            primary = _fallback_action(
+                "Schedule targeted intervention call",
+                f"Account shows high risk (score: {risk_score}). "
+                "Schedule a focused intervention call to address specific concerns.",
+                0.73, "High — addresses risk before it escalates"
+            )
+            alternatives = [
+                _fallback_action(
+                    "Prepare custom success plan with milestones",
+                    "Create a tailored success plan with measurable milestones.", 0.62,
+                    "Medium — provides structured path forward"
+                ),
+                _fallback_action(
+                    "Offer discounted renewal with value-add services",
+                    "Propose a renewal package with additional services.", 0.50,
+                    "Medium — financial incentive to stay"
+                ),
+            ]
+        elif risk_level == "medium":
+            primary = _fallback_action(
+                "Schedule Quarterly Business Review (QBR)",
+                f"Account shows moderate risk (score: {risk_score}). "
+                "Schedule a QBR to review performance and identify opportunities.",
+                0.73, "Medium — maintains relationship and identifies opportunities"
+            )
+            alternatives = [
+                _fallback_action(
+                    "Conduct health check survey",
+                    "Send a structured survey to gather satisfaction data.", 0.55,
+                    "Low — provides additional signal data"
+                ),
+                _fallback_action(
+                    "Share relevant playbook articles",
+                    "Share playbook articles addressing identified risk factors.", 0.45,
+                    "Low — educational value"
+                ),
+            ]
+        else:  # low risk
+            primary = _fallback_action(
+                "Propose enterprise upgrade or expansion",
+                f"Account is healthy (score: {risk_score}). "
+                "Propose expansion, upgrade, or API access to capitalize on engagement.",
+                0.73, "High — captures expansion opportunity"
+            )
+            alternatives = [
+                _fallback_action(
+                    "Request customer referral or case study",
+                    "Ask the satisfied customer for a referral to drive new business.", 0.60,
+                    "Medium — generates pipeline and social proof"
+                ),
+                _fallback_action(
+                    "Schedule product roadmap review",
+                    "Share upcoming roadmap and gather feedback on priorities.", 0.55,
+                    "Medium — strengthens partnership"
+                ),
+            ]
 
-    result = {
-        "primary": primary,
-        "alternatives": alternatives,
-    }
-    return json.dumps(result)
+        return json.dumps({"primary": primary, "alternatives": alternatives})
 
 
 def _parse_recommendations(raw: str) -> dict:
@@ -187,6 +229,7 @@ def generate(state: dict) -> dict:
 
     risk = state.get("risk", {})
     knowledge = state.get("knowledge_chunks", [])
+    account_data = state.get("account_data", {})
     risk_level = risk.get("risk_level", "medium")
     risk_score = risk.get("risk_score", 0.5)
 
@@ -196,19 +239,8 @@ def generate(state: dict) -> dict:
         risk_level=risk_level, risk_score=risk_score
     )
 
-    prompt = (
-        "You are a customer success strategist. Given the risk assessment, "
-        "knowledge, and past resolved cases, recommend 3 actions.\n"
-        "Return ONLY JSON with keys: primary (Action), alternatives (list of 2 Actions).\n"
-        "Action schema: {title, description, confidence (0.0-1.0), estimated_impact, "
-        "evidence_ids, precedent_accounts}\n\n"
-        f"Risk: {json.dumps(risk, indent=2)}\n"
-        f"Knowledge: {json.dumps(knowledge, indent=2)}\n"
-        f"Memory: {json.dumps(memory_context.model_dump(), indent=2)}"
-    )
-
     try:
-        raw_response = _call_model(risk, knowledge, memory_context.model_dump())
+        raw_response = _call_model(risk, knowledge, memory_context.model_dump(), account_data)
         parsed = _parse_recommendations(raw_response)
 
         primary = parsed["primary"]
@@ -267,4 +299,5 @@ def generate(state: dict) -> dict:
     return {
         "recommendations": {"primary": primary, "alternatives": alternatives},
         "agent_trace": state["agent_trace"],
+        "memory_context": memory_context.model_dump(),
     }

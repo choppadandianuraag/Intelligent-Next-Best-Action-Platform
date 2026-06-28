@@ -1,0 +1,22 @@
+{
+  "case_id": "IN-CASE-006",
+  "account_name": "Paytm Enterprise Operations",
+  "arr": 9200000,
+  "arr_inr_display": "₹92,00,000",
+  "region": "Noida, Uttar Pradesh",
+  "industry": "FinTech / Payments",
+  "situation_summary": "Following Paytm's public market challenges, internal cost review flagged several enterprise SaaS tools for elimination. Platform had strong usage metrics but the business unit head was new and had no relationship with the CSM. Renewal at risk due to political dynamics, not product issues.",
+  "risk_signals": [
+    "new business unit head with no CSM relationship",
+    "internal cost reduction programme activated",
+    "renewal decision moved to committee — 5 approvers",
+    "champion Aditi on maternity leave for renewal period",
+    "no executive sponsor from vendor side"
+  ],
+  "action_taken": "Immediate executive outreach from our VP Customer Success to new BU head. Committee briefing pack prepared with usage data, cost-per-user benchmarks vs. industry, and 3 customer references in FinTech. EBR held as committee meeting. Multi-year pricing offered.",
+  "outcome": "Renewed on 18-month deal. New BU head became executive sponsor. Aditi welcomed back with a tailored expansion roadmap.",
+  "days_to_resolution": 15,
+  "renewal_achieved": true,
+  "csm": "Priya Nair",
+  "csm_notes": "Political risk is real and different from product risk. When a committee is making the call, you need a briefing pack they can circulate internally — not just talking points for your champion. Having our VP reach out peer-to-peer to the new BU head was the move that unlocked this one."
+}

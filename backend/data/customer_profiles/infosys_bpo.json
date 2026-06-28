@@ -1,0 +1,21 @@
+{
+  "account_name": "Infosys BPO",
+  "arr": 7200000,
+  "arr_inr_display": "₹72,00,000",
+  "industry": "IT Services / BPO",
+  "region": "Pune, Maharashtra",
+  "contract_end": "2026-08-07",
+  "csm": "Priya Nair",
+  "health_score_history": [74, 69, 62, 54, 47],
+  "daily_active_users": 61,
+  "total_licensed_users": 340,
+  "last_login_date": "2026-06-09",
+  "features_adopted": ["dashboard", "alerts"],
+  "open_tickets": 6,
+  "nps_score": 24,
+  "risk_score": 0.82,
+  "risk_level": "critical",
+  "primary_contact": "Rajesh Kulkarni",
+  "primary_contact_title": "AVP Operations",
+  "notes": "SLA module mismatch — does not support process-type + shift based SLA tracking. Competitor evaluation in progress."
+}

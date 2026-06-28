@@ -39,8 +39,9 @@ uvicorn backend.main:app --reload --port 8000
 
 ### 6. Start frontend
 ```bash
-streamlit run frontend/app.py
-# Opens at http://localhost:8501
+cd figma/dist && python3 -m http.server 5173
+# Opens at http://localhost:5173
+# Or for development: cd figma && pnpm dev
 ```
 
 ---
@@ -49,9 +50,9 @@ streamlit run frontend/app.py
 
 | Scenario | Account | Expected | Key Point |
 |----------|---------|----------|-----------|
-| 1 — Cold start | Acme Corp | 84% critical risk | EBR recommendation, 73% confidence, no memory |
-| 2 — Contrast | Globex Corp | 12% low risk | Expansion recommendation, 88% confidence |
-| 3 — Memory | TechCorp | Similar signals to Acme | Confidence boosted 73% → 89%, 2 precedent cases |
+| 1 — Cold start | BYJU's Learning | High/Critical risk | Budget crisis, pricing ask, memory cold start |
+| 2 — Contrast | Zomato Ops | Low risk | Growth signals, expansion recommendation |
+| 3 — Memory | Wipro CloudOps | High risk | Champion departure, boosted confidence by memory |
 
 ---
 
@@ -77,7 +78,7 @@ API docs available at http://localhost:8000/docs
 
 ### `POST /analyze`
 ```json
-Request:  { "account_id": "acme_corp", "interaction_text": "..." }
+Request:  { "account_id": "byju_learning", "interaction_text": "..." }
 Response: RecommendationOutput (see schemas.py)
 ```
 
@@ -117,13 +118,12 @@ meridian/
 │       ├── playbooks/             # 15 × .md knowledge articles
 │       ├── customer_profiles/     # 5 × .json CRM snapshots
 │       └── resolved_cases/        # 6 × .json for memory seeding
-├── frontend/
-│   ├── app.py                     # Streamlit entry point
-│   └── components/
-│       ├── agent_trace.py         # Pipeline trace expander
-│       ├── recommendation_panel.py # Risk gauge + action cards
-│       ├── memory_panel.py        # Memory context + confidence boost viz
-│       └── hitl_widget.py         # Accept / Modify / Reject buttons
+├── figma/
+│   ├── src/
+│   │   └── app/App.tsx            # React SPA entry point
+│   ├── dist/                      # Pre-built static bundle
+│   ├── package.json               # pnpm dependencies
+│   └── vite.config.ts             # Vite build config
 ├── scripts/
 │   ├── ingest.py                  # Embed all data/ docs into ChromaDB
 │   └── seed_memory.py             # Pre-load resolved_cases into episodic memory
@@ -151,7 +151,7 @@ pytest tests/eval_scenarios.py -v
 | `GROQ_MODEL` | `llama-3.3-70b-versatile` | Groq model to use |
 | `CHROMA_PERSIST_DIR` | `backend/data/chroma_db` | ChromaDB persistence path |
 | `EPISODIC_DB_PATH` | `./episodic_memory.db` | SQLite database path |
-| `BACKEND_URL` | `http://localhost:8000` | Used by Streamlit frontend |
+| `BACKEND_URL` | `http://localhost:8000` | Used by React frontend |
 
 ---
 
@@ -161,7 +161,7 @@ pytest tests/eval_scenarios.py -v
 |--------|------|-----------------|
 | P1 | AI / Agents Lead | Pydantic schemas, LangGraph graph, 5 agents, prompt tuning |
 | P2 | Data / Memory Lead | Sample data, ChromaDB ingestion, SQLite episodic memory |
-| P3 | Frontend / Demo Lead | FastAPI server, Streamlit UI, architecture docs, demo |
+| P3 | Frontend / Demo Lead | FastAPI server, React UI, architecture docs, demo |
 
 ---
 
@@ -178,6 +178,6 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full system diagram and
 - **ChromaDB** — vector store for knowledge base retrieval
 - **SQLite** — episodic memory for CSM decision history
 - **FastAPI** — REST API server
-- **Streamlit** — interactive frontend
+- **React + Vite** — interactive frontend (figma/)
 - **Pydantic v2** — data validation and schema contracts
 - **sentence-transformers** — local text embeddings (all-MiniLM-L6-v2)
