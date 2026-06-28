@@ -6,38 +6,42 @@
 # Terminal 1 — Start the FastAPI backend
 uvicorn backend.main:app --reload --port 8000
 
-# Terminal 2 — Start the Streamlit frontend
-streamlit run frontend/app.py
+# Terminal 2 — Start the React frontend
+cd figma/dist && python3 -m http.server 5173
 ```
 
-- Run `python scripts/seed_memory.py` first so memory is pre-loaded with the 6 resolved cases
-- Have the browser open at http://localhost:8501
+- Run `python scripts/seed_memory.py` first so memory is pre-loaded with resolved cases
+- Have the browser open at http://localhost:5173
 - Confirm backend health indicator shows green in sidebar
 
 ---
 
-## Scenario 1 — Cold Start: Acme Corp (At-Risk)
+## Scenario 1 — Cold Start: BYJU's Learning Operations (Critical Risk)
 
 **Total time:** 0:00 – 1:45
 
-**Narrator:** "Sarah just got off a difficult call with Acme Corp's VP of Operations. Let's see what Meridian tells her to do."
+**Narrator:** "Neha just got off a difficult call with BYJU's VP of Operations. Renewal is in 22 days, and there's a company-wide 30% SaaS reduction mandate. Let's see what Meridian tells her."
 
 ### Actions
-1. Select **"Acme Corp — At Risk"** from the account dropdown
+1. Select **"BYJU's Learning Operations"** from the account dropdown
 2. Paste the following transcript:
 
 ```
-Sarah Chen (CSM): Thanks for joining today. I wanted to check in on how things are going with the platform.
+Neha Sharma (CSM): Good morning Sanjay ji. I know your renewal is coming up very soon. I wanted to have a candid conversation.
 
-Mark Williams (VP Operations, Acme Corp): Honestly, Sarah, we're pretty frustrated. We've been paying $85,000 a year and I can barely get my team to log in. The reporting module doesn't do what we need and my CFO is asking hard questions about renewal.
+Sanjay Patel (VP Operations, BYJU's): Neha, I'll be frank. Our company has been going through a very difficult period as you know. There are budget pressures at every level. I have been asked to cut non-essential SaaS spend by 30%.
 
-Sarah: I understand. Can you tell me more about what's missing in reporting?
+Neha: I understand the external pressures. I want to help you make a strong case internally. Can you tell me what value the team has gotten from the platform this year?
 
-Mark: We need to compare performance across business units side by side. The current tool just shows everything flat. And support has taken over 2 weeks to respond to our last two tickets.
+Sanjay: Honestly the operations team does find it useful — the course delivery tracking and tutor scheduling has been helpful. But I cannot quantify the exact ROI to put in front of my CFO.
 
-Sarah: We do have a comparison view — I wonder if it's not configured correctly for your setup. Let me look into that.
+Neha: I can help with that. I have prepared a usage report — your team logged 1,847 sessions this quarter, the scheduling module reduced manual coordination by an estimated 18 hours per week, and escalation resolution time dropped by 40%. Can I share that with you to present internally?
 
-Mark: Look, our renewal is in 47 days. If we can't see a real improvement in the next few weeks, I'm going to have to recommend we evaluate alternatives. I've already had a preliminary conversation with a competitor.
+Sanjay: Yes, please send that. That might help. But Neha, I need to ask — is there any flexibility on pricing? Even a 15-20% reduction would make this conversation much easier.
+
+Neha: I cannot commit to pricing changes myself, but I will escalate to my VP today. Given your situation and the renewal timeline, I want to bring you something by tomorrow morning.
+
+Sanjay: That would be very appreciated. If you can get me something reasonable by tomorrow, I will fight for this renewal internally.
 ```
 
 3. Click **Analyse account**
@@ -45,117 +49,129 @@ Mark: Look, our renewal is in 47 days. If we can't see a real improvement in the
 
 ### What to point out
 - **Agent trace** (right column, expanded): 5 agents ran in sequence — Planner → Interaction Analyzer → Knowledge Retriever → Risk Assessor → NBA Generator
-- **Risk score: 84%. Critical level.** 4 signals detected
-- **Evidence**: The system pulled from the meeting note, the churn prevention playbook, and the EBR guide
-- **Primary recommendation**: "Schedule Executive Business Review within 48h" with 73% confidence
-- **No memory context** — this is a cold start, no similar cases yet
+- **Risk score: high/critical.** Multiple signals detected — budget pressure, ROI quantification request, pricing flexibility ask
+- **Evidence**: The system pulled from the India churn prevention playbook and the Reliance Jio resolved case
+- **Primary recommendation** displays with base confidence and concrete action
+- **No memory context** — this is a cold start, no similar cases yet logged via HITL
 
 ### Action
 Click **✅ Accept**
 
-**Narrator:** "Sarah accepts the recommendation. That decision is now logged to Meridian's episodic memory."
+**Narrator:** "Neha accepts the recommendation. That decision is now logged to Meridian's episodic memory."
 
 ---
 
-## Scenario 2 — Contrast: Globex Corp (Healthy)
+## Scenario 2 — Contrast: Zomato Operations Intelligence (Healthy — Expansion)
 
 **Total time:** 1:45 – 3:00
 
-**Narrator:** "Now let's show that Meridian handles positive scenarios too, not just churn."
+**Narrator:** "Now let's show that Meridian handles positive scenarios too — not just churn."
 
 ### Actions
-1. Select **"Globex Corp — Healthy"** from the dropdown
+1. Select **"Zomato Operations Intelligence"** from the dropdown
 2. Paste the following transcript:
 
 ```
-David Kim (CSM): Great to connect, Rachel. The QBR numbers look fantastic this quarter.
+Divya Reddy (CSM): Hi Abhinav! Good to connect. How's the platform working for the ops team?
 
-Rachel Torres (Head of Operations, Globex Corp): Yes, the team loves the platform. We're at 94% adoption across all five features. Actually, I wanted to ask — we're planning to onboard 3 more business units in Q3. Is there an enterprise tier that would cover that?
+Abhinav Joshi (Head of Ops Intelligence, Zomato): Divya, things are going well overall. The real-time dashboards are being used daily — our city leads love the visibility. NPS internally for the tool is solid.
 
-David: Absolutely. The enterprise tier includes unlimited seats, dedicated API access, and a dedicated CSM pod.
+Divya: That's great to hear! Are there any areas where you feel we could do more?
 
-Rachel: The API access is key for us — we want to build our own dashboards pulling from your data. What's the timeline to get a scoping call with your technical team?
+Abhinav: Yes, actually. We are growing very fast — we just expanded to 12 new cities in the last quarter. The platform handles our current city count fine, but I am worried about scale. When we hit 80+ cities, will the performance hold?
 
-David: I can set that up for next week. Our engineering team loves working with customers like you on custom integrations.
+Divya: That is a great question to raise early. Our platform is architected to scale to several hundred data sources — we have clients with much higher volumes. But I will have our Solutions team run a capacity review specifically for your growth trajectory and give you a written assessment.
 
-Rachel: Perfect. And our NPS score is apparently 68 — I hope that earns us a good rate!
+Abhinav: That would be very reassuring to have in writing. Also — we need the mobile app to be better. Our delivery partners and city managers are always on the move. The current mobile experience is clunky.
+
+Divya: Noted. Mobile UX is something we have a major update coming for in Q3. I can get you early access to the beta if you are interested.
+
+Abhinav: Yes, absolutely. Put us on the beta list. If the mobile experience improves, I think we are looking at a multi-year renewal conversation.
+
+Divya: I'll make sure of that. I'll connect you with our product team for the beta access by next week.
 ```
 
 3. Click **Analyse account**
 
 ### What to point out
-- **Risk score: 12%. Low risk.** Only 2 positive signals
-- **Primary recommendation**: "Propose enterprise upgrade this week" with 88% confidence
-- **No memory panel** — this is an expansion case, memory is calibrated for at-risk scenarios
+- **Risk score: Low.** Positive signals dominate — NPS satisfaction, growth intent, multi-year renewal signal
+- **Primary recommendation** focuses on expansion/multi-year renewal with high confidence
+- **Evidence panel** shows the India expansion playbook and relevant resolved cases
 - "Meridian doesn't just detect churn — it recognizes expansion opportunities and gives the CSM a concrete action with high confidence."
 
 ---
 
-## Scenario 3 — The Money Moment: TechCorp + Memory
+## Scenario 3 — The Money Moment: Wipro CloudOps + Memory Boost
 
 **Total time:** 3:00 – 5:00
 
-**Narrator:** "Now here's what makes Meridian different. TechCorp has similar churn signals to Acme Corp. Watch what happens."
+**Narrator:** "Now here's what makes Meridian different. Wipro CloudOps has a champion departure situation — we've seen other accounts with this exact pattern. Watch what happens when the system has memory."
 
 ### Actions
-1. Select **"TechCorp — Onboarding"** from the dropdown
+1. Select **"Wipro CloudOps"** from the dropdown
 2. Paste the following transcript:
 
 ```
-Emily Zhang (CSM): Hi Marcus, just checking in on your second week with the platform.
+Sneha Iyer (CSM): Good afternoon Vikram ji. How has the quarter been going?
 
-Marcus Lee (IT Manager, TechCorp): Emily, I appreciate the check-in. Honestly, setup has been rougher than we expected. We haven't been able to connect our CRM yet and only 3 of our 18 users have logged in this week.
+Vikram Sharma (Director of Cloud Operations, Wipro): Sneha, honestly it has been mixed. The platform is good, but we have a people problem — our champion Ananya left the company last month. She was the one who drove adoption across all three teams. Now I am not sure who owns this internally.
 
-Emily: That's concerning. What's blocking the CRM integration?
+Sneha: Oh, I did not know about Ananya's departure. That is a significant change. Have you identified someone to take over?
 
-Marcus: Our IT team says the documentation isn't clear about the OAuth flow. We've opened a ticket but it's been 5 days without a response.
+Vikram: We have someone in mind — Rohan Bapat from the integration team. He has seen the platform but never been formally trained. And with Q2 closing next month, nobody has bandwidth to do a proper handover.
 
-Emily: I apologize for that — that's too long. Let me escalate that internally today.
+Sneha: I completely understand. This is actually a situation we have handled before. We have an accelerated re-onboarding program specifically for champion transitions. I can have Rohan trained and certified in 2 weeks without interrupting his Q2 work.
 
-Marcus: I hope so. Our management signed off on this to improve team efficiency. If we can't get the setup done in the next two weeks, we're going to have to reconsider whether this was the right decision.
+Vikram: That sounds promising. What does that involve?
+
+Sneha: Three focused 90-minute sessions, self-paced modules, and I will set up office hours for his team for the first month. We have done this for two other large accounts this year and both renewed.
+
+Vikram: If you can make that happen before end of July, I think we will be in a good place for renewal. The platform itself is solving the right problems — it is just the knowledge transfer that is the gap.
+
+Sneha: Consider it done. I will send you a proposed schedule by end of day tomorrow.
 ```
 
 3. Click **Analyse account**
 
 ### What to point out
-- **Memory Boost panel appears** — "2 similar cases found: Acme Corp, GlobexQ1"
-- **Base confidence: 73% → Boosted confidence: 89%** (delta: +16%)
-- "The platform remembered what worked with Acme Corp. It resolved in 14 days after an EBR. So for TechCorp, it's recommending the same approach — with higher confidence."
-- Point to the `precedent_accounts` on the primary recommendation card
+- **Memory Boost panel appears** — similar cases found from episodic memory (e.g., Nykaa Champion Change, Reliance Jio EBR)
+- **Base confidence vs Boosted confidence** — the system's confidence increases because of past resolved cases with matching risk profiles
+- **`precedent_accounts`** shown on the primary recommendation card — the system tells you *which* past cases influenced this recommendation
 - **"This is the differentiator: Every accepted recommendation makes the next recommendation smarter. This is the memory loop."**
 
 ### Action (optional — shows Modify flow)
 1. Click **✏️ Modify**
-2. Type: "Change approach to focus on onboarding support first, EBR in 2 weeks if not resolved"
+2. Type: "Add product deep-dive session before the re-onboarding begins"
 3. Click **Confirm Modification**
-4. Say: "Sarah wants to adjust the recommendation. She submits her feedback, and Meridian logs it to episodic memory for future learning."
+4. Say: "Sneha adjusts the recommendation. Her feedback is logged to episodic memory for future learning."
 
 ### Narrator (closing)
-"Sarah isn't guessing anymore. She has the collective intelligence of every case her team has resolved — surfaced automatically, in real time, with a confidence score she can act on. That's Meridian."
+"Sneha isn't guessing anymore. She has the collective intelligence of every case her team has resolved — surfaced automatically, in real time, with a confidence score she can act on. That's Meridian."
 
 ---
 
 ## Timing Guide
 - Setup/intro: ~30 seconds
-- Scenario 1 (Acme Corp): ~90 seconds
-- Scenario 2 (Globex Corp): ~60 seconds
-- Scenario 3 (TechCorp + memory): ~90 seconds
+- Scenario 1 (BYJU's — cold start): ~90 seconds
+- Scenario 2 (Zomato — expansion contrast): ~60 seconds
+- Scenario 3 (Wipro — memory boost): ~90 seconds
 - Wrap-up: ~30 seconds
 - **Total: ~5 minutes**
 
 ## Transcript Cheat Sheet
 
-| Account | Expected Risk | Expected Primary Action |
-|---------|--------------|------------------------|
-| Acme Corp | 84% — Critical | Schedule EBR within 48h |
-| Globex Corp | 12% — Low | Propose enterprise upgrade |
-| TechCorp | 52% — Medium | Accelerate onboarding with dedicated support |
+| Account | Expected Risk | Why |
+|---------|--------------|-----|
+| BYJU's Learning | High/Critical | Budget reduction mandate, pricing ask, competitor risk, 22d renewal |
+| Zomato Ops | Low | Positive signals, expansion intent, multi-year renewal interest |
+| Wipro CloudOps | High | Champion departure, onboarding gap, knowledge transfer risk |
 
 ## Setup Verification Checklist
 
 - [ ] `python scripts/ingest.py` — knowledge_base count >= 80
 - [ ] `python scripts/seed_memory.py` — memory_log count >= 6
 - [ ] `uvicorn backend.main:app --port 8000` — server starts without errors
-- [ ] `streamlit run frontend/app.py` — UI opens in browser
+- [ ] `cd figma/dist && python3 -m http.server 5173` — UI opens in browser
+- [ ] Account dropdown showing Indian accounts (BYJU's, Zomato, Wipro, etc.)
 - [ ] Backend health indicator shows ✅ green in sidebar
 - [ ] GROQ_API_KEY is set in .env

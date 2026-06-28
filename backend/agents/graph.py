@@ -10,6 +10,7 @@ from backend.models.schemas import (
     AgentStep,
     Evidence,
     Action,
+    MemoryContext,
     RecommendationOutput,
 )
 from backend.agents.planner import plan
@@ -29,6 +30,7 @@ class GraphState(TypedDict):
     agent_trace: List[dict]
     account_data: dict
     execution_plan: Optional[List[str]]
+    memory_context: Optional[dict]
 
 
 builder = StateGraph(GraphState)
@@ -95,6 +97,7 @@ def run(raw_input: str, account_id: str) -> RecommendationOutput:
         "agent_trace": [],
         "account_data": profile,
         "execution_plan": None,
+        "memory_context": None,
     }
 
     final_state = graph.invoke(initial_state)
@@ -118,6 +121,6 @@ def run(raw_input: str, account_id: str) -> RecommendationOutput:
         evidence=evidence,
         primary_recommendation=primary,
         alternatives=alternatives,
-        memory_context=None,
+        memory_context=MemoryContext(**final_state["memory_context"]) if final_state.get("memory_context") else None,
         generated_at=datetime.utcnow(),
     )

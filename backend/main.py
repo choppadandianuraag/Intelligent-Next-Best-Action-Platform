@@ -8,6 +8,7 @@ Endpoints:
 """
 import json
 import os
+import re
 import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime
@@ -163,16 +164,26 @@ async def create_account(request: CreateAccountRequest):
     }
 
 
+def _clean_transcript(text: str) -> str:
+    """Strip markdown formatting from transcript text before analysis."""
+    text = re.sub(r'\*\*(.+?)\*\*', r'\1', text)  # bold
+    text = re.sub(r'\*(.+?)\*', r'\1', text)        # italic
+    text = re.sub(r'^#{1,4}\s+', '', text, flags=re.MULTILINE)  # headings
+    text = re.sub(r'\|(.+?)\|', r'\1', text)        # table pipes (keep content)
+    return text.strip()
+
+
 @app.post("/analyze", response_model=RecommendationOutput)
 async def analyze(request: AnalyzeRequest):
     """Run the full agent pipeline for the given account and interaction text."""
-    if not request.interaction_text.strip():
+    cleaned = _clean_transcript(request.interaction_text)
+    if not cleaned:
         raise HTTPException(status_code=400, detail="interaction_text cannot be empty")
     if not request.account_id.strip():
         raise HTTPException(status_code=400, detail="account_id cannot be empty")
 
     try:
-        result = run(request.interaction_text, request.account_id)
+        result = run(cleaned, request.account_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Agent pipeline failed: {str(e)}")
 
@@ -213,3 +224,21 @@ async def feedback(request: FeedbackRequest):
         "request_id": request.request_id,
         "decision": request.decision,
     }
+
+
+@app.get("/memory")
+async def get_memory_log():
+    """Return the full episodic memory log (past CSM decisions)."""
+    import sqlite3
+
+    if _episodic is None:
+        raise HTTPException(status_code=503, detail="Episodic memory not initialized")
+
+    rows = _episodic.conn.execute(
+        "SELECT id, account, risk_score, risk_level, recommendation_title, "
+        "decision, modification_notes, outcome, timestamp "
+        "FROM memory_log ORDER BY id DESC LIMIT 50"
+    ).fetchall()
+    cols = ["id", "account", "risk_score", "risk_level", "recommendation_title",
+            "decision", "modification_notes", "outcome", "timestamp"]
+    return {"entries": [dict(zip(cols, r)) for r in rows]}
